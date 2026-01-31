@@ -95,9 +95,8 @@ export function CameraScanner() {
   return (
     <div className="h-full min-h-screen bg-black dark:bg-gray-950 flex flex-col lg:flex-row relative">
       {/* Desktop Left Panel - Profile Quick Access with Slide Toggle */}
-      <div className={`hidden lg:flex lg:flex-col bg-gradient-to-br from-gray-900 to-gray-950 border-r border-gray-800 absolute lg:relative z-20 h-full transition-all duration-300 ${
-        isSidebarOpen ? 'lg:w-80' : 'lg:w-0 lg:border-r-0'
-      }`}>
+      <div className={`hidden lg:flex lg:flex-col bg-gradient-to-br from-gray-900 to-gray-950 border-r border-gray-800 shrink-0 z-20 transition-all duration-300 overflow-hidden ${isSidebarOpen ? 'lg:w-80' : 'lg:w-0 lg:border-r-0'
+        }`}>
         <div className={`transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <div className="p-6 border-b border-gray-800 flex items-center gap-3">
             <img src={logo} alt="SafeBite Logo" className="w-10 h-10" />
@@ -106,7 +105,7 @@ export function CameraScanner() {
               <p className="text-gray-400 text-sm">Scan products safely</p>
             </div>
           </div>
-          
+
           <div className="flex-1 p-6 space-y-4">
             <button
               onClick={() => navigate('/profile')}
@@ -160,7 +159,7 @@ export function CameraScanner() {
         {/* Camera view */}
         <div className="flex-1 relative bg-gradient-to-br from-gray-800 to-gray-900 dark:from-gray-900 dark:to-black">
           <div id="barcode-camera" className="absolute inset-0 z-0" />
-          
+
           {/* Top bar - Mobile Only */}
           <div className="lg:hidden absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
             <button
@@ -248,11 +247,10 @@ export function CameraScanner() {
           {/* Scan button - Bigger on desktop */}
           <button
             onClick={handleScan}
-            className={`w-28 h-28 lg:w-32 lg:h-32 mx-auto rounded-full flex items-center justify-center transition-all shadow-2xl ${
-              isScanning
+            className={`w-28 h-28 lg:w-32 lg:h-32 mx-auto rounded-full flex items-center justify-center transition-all shadow-2xl ${isScanning
                 ? 'bg-red-500 scale-95'
                 : 'bg-emerald-500 hover:bg-emerald-600 active:scale-95 shadow-emerald-500/50'
-            }`}
+              }`}
           >
             <div className="w-24 h-24 lg:w-28 lg:h-28 bg-white rounded-full flex items-center justify-center">
               <ScanLine className={`w-12 h-12 lg:w-14 lg:h-14 text-emerald-500 ${isScanning ? 'animate-pulse' : ''}`} />
