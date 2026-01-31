@@ -1,16 +1,32 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Leaf, ChevronRight, Plus, X, Check, ArrowLeft } from 'lucide-react';
+import { Leaf, ChevronRight, Plus, X, Check, ArrowLeft, LucideIcon } from 'lucide-react';
 
-const dietTypes = [
-  { id: 'vegetarian', label: 'Vegetarian', emoji: '🥗' },
-  { id: 'vegan', label: 'Vegan', emoji: '🌱' },
-  { id: 'pescatarian', label: 'Pescatarian', emoji: '🐟' },
-  { id: 'keto', label: 'Keto', emoji: '🥑' },
-  { id: 'paleo', label: 'Paleo', emoji: '🥩' },
-  { id: 'halal', label: 'Halal', emoji: '☪️' },
-  { id: 'kosher', label: 'Kosher', emoji: '✡️' },
-  { id: 'gluten-free', label: 'Gluten-Free', emoji: '🌾' },
+import {
+  Sprout,
+  Fish,
+  Flame,
+  Drumstick,
+  Shield,
+  Star,
+  WheatOff
+} from "lucide-react";
+
+type DietType = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+};
+
+const dietTypes: DietType[] = [
+  { id: "vegetarian", label: "Vegetarian", icon: Leaf },
+  { id: "vegan", label: "Vegan", icon: Sprout },
+  { id: "pescatarian", label: "Pescatarian", icon: Fish },
+  { id: "keto", label: "Keto", icon: Flame },
+  { id: "paleo", label: "Paleo", icon: Drumstick },
+  { id: "halal", label: "Halal", icon: Shield },
+  { id: "kosher", label: "Kosher", icon: Star },
+  { id: "gluten-free", label: "Gluten-Free", icon: WheatOff },
 ];
 
 const commonIngredientsToAvoid = [
@@ -44,17 +60,6 @@ export function ProfileSetupStep3() {
         ? prev.filter(i => i !== ingredient)
         : [...prev, ingredient]
     );
-  };
-
-  const addCustomIngredient = () => {
-    if (customIngredient.trim()) {
-      setIngredientsToAvoid([...ingredientsToAvoid, customIngredient.trim()]);
-      setCustomIngredient('');
-    }
-  };
-
-  const removeIngredient = (ingredient: string) => {
-    setIngredientsToAvoid(ingredientsToAvoid.filter(i => i !== ingredient));
   };
 
   const handleComplete = () => {
@@ -116,7 +121,9 @@ export function ProfileSetupStep3() {
                     <Check className="w-3 h-3 text-white" />
                   </div>
                 )}
-                <div className="text-2xl mb-1">{diet.emoji}</div>
+                <div className="text-2xl mb-1">
+                  <diet.icon className="w-6 h-6" />
+                </div>
                 <div className="text-sm font-medium text-gray-900">
                   {diet.label}
                 </div>
@@ -146,37 +153,6 @@ export function ProfileSetupStep3() {
             ))}
           </div>
 
-          {/* Custom ingredient tags */}
-          {ingredientsToAvoid.filter(i => !commonIngredientsToAvoid.includes(i)).length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {ingredientsToAvoid.filter(i => !commonIngredientsToAvoid.includes(i)).map(ingredient => (
-                <span key={ingredient} className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-100 text-orange-900 rounded-lg text-sm">
-                  {ingredient}
-                  <button onClick={() => removeIngredient(ingredient)}>
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Add custom */}
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={customIngredient}
-              onChange={(e) => setCustomIngredient(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && addCustomIngredient()}
-              placeholder="Add custom ingredient"
-              className="flex-1 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm"
-            />
-            <button
-              onClick={addCustomIngredient}
-              className="px-4 bg-emerald-500 text-white rounded-xl active:scale-95 transition-transform"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
-          </div>
         </div>
       </div>
 

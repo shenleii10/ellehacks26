@@ -22,13 +22,14 @@ const commonAllergies = [
   'Wheat',
   'Fish',
   'Shellfish',
-  'Sesame'
+  'Sesame',
+  'Lactose',
 ];
 
 export function ProfileSetupStep2() {
   const [healthConditions, setHealthConditions] = useState<string[]>([]);
   const [allergies, setAllergies] = useState<string[]>([]);
-  const [customHealth, setCustomHealth] = useState('');
+  // const [customHealth, setCustomHealth] = useState('');
   const [customAllergy, setCustomAllergy] = useState('');
   const navigate = useNavigate();
 
@@ -48,12 +49,12 @@ export function ProfileSetupStep2() {
     );
   };
 
-  const addCustomHealth = () => {
-    if (customHealth.trim()) {
-      setHealthConditions([...healthConditions, customHealth.trim()]);
-      setCustomHealth('');
-    }
-  };
+  // const addCustomHealth = () => {
+  //   if (customHealth.trim()) {
+  //     setHealthConditions([...healthConditions, customHealth.trim()]);
+  //     setCustomHealth('');
+  //   }
+  // };
 
   const addCustomAllergy = () => {
     if (customAllergy.trim()) {
@@ -62,9 +63,9 @@ export function ProfileSetupStep2() {
     }
   };
 
-  const removeHealth = (condition: string) => {
-    setHealthConditions(healthConditions.filter(c => c !== condition));
-  };
+  // const removeHealth = (condition: string) => {
+  //   setHealthConditions(healthConditions.filter(c => c !== condition));
+  // };
 
   const removeAllergy = (allergy: string) => {
     setAllergies(allergies.filter(a => a !== allergy));
@@ -124,40 +125,8 @@ export function ProfileSetupStep2() {
               </button>
             ))}
           </div>
-
-          {/* Custom health condition tags */}
-          {healthConditions.filter(h => !commonHealthConditions.includes(h)).length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {healthConditions.filter(h => !commonHealthConditions.includes(h)).map(condition => (
-                <span key={condition} className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-100 text-emerald-900 rounded-lg text-sm">
-                  {condition}
-                  <button onClick={() => removeHealth(condition)}>
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Add custom */}
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={customHealth}
-              onChange={(e) => setCustomHealth(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && addCustomHealth()}
-              placeholder="Add custom condition"
-              className="flex-1 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-sm"
-            />
-            <button
-              onClick={addCustomHealth}
-              className="px-4 bg-emerald-500 text-white rounded-xl active:scale-95 transition-transform"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
-          </div>
         </div>
-
+        
         {/* Allergies */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-3">
