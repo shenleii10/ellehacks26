@@ -6,7 +6,8 @@ export async function getProductByBarcode(barcode) {
   if (cached) return cached;
 
   const res = await fetch(
-    `https://world.openfoodfacts.org/api/v2/product/${barcode}.json?lc=en`
+    `https://world.openfoodfacts.org/api/v2/product/${barcode}.json` +
+    `?fields=product_name,ingredients_text_en,ingredients_text,ingredients,allergens_tags`
   );
   const data = await res.json();
 
@@ -14,13 +15,18 @@ export async function getProductByBarcode(barcode) {
     throw new Error('Product not found');
   }
 
+  const rawIngredients =
+    data.product.ingredients_text_en ||
+    data.product.ingredients_text ||
+    data.product.ingredients?.map(i => i.text).join(",") ||
+    "";
+
   const product = {
-    name: data.product.product_name,
-    ingredients: normalizeIngredients(
-      data.product.ingredients_text_en ||
-      data.product.ingredients_text
-    ),
-    allergens: data.product.allergens_tags
+    name: data.product.product_name_en || data.product.product_name || "Unknown product",
+    ingredients: normalizeIngredients(rawIngredients),
+    allergens: (data.product.allergens_tags || []).map(tag =>
+      tag.replace("en:", "")
+    )
   };
 
   setCached(barcode, product);
