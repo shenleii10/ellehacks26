@@ -1,26 +1,67 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { ScanLine, Image as ImageIcon, User, Info } from 'lucide-react';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 
 export function CameraScanner() {
+
+  const scanLockRef = useRef(false);
+  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+
   const [isScanning, setIsScanning] = useState(false);
   const navigate = useNavigate();
 
-  const handleScan = () => {
-    setIsScanning(true);
+  useEffect(() => {
+  if (!html5QrCodeRef.current) {
+    html5QrCodeRef.current = new Html5Qrcode("barcode-camera");
+  } return () => {
+    try {
+      if (html5QrCodeRef.current?.isScanning) {
+        html5QrCodeRef.current.stop().catch(() => {});
+      }
+    } catch {};
+  };
+}, []);
+
+  const handleScan = async () => {
+    if (isScanning) return;
+    if (!html5QrCodeRef.current) return;
     
-    // Simulate barcode scanning
-    setTimeout(() => {
-      setIsScanning(false);
-      // Navigate to product info with a mock product ID
-      navigate('/product/mock-product-1');
-    }, 2000);
+  try {
+    scanLockRef.current = false;
+    setIsScanning(true);
+
+    await html5QrCodeRef.current?.start(
+      { facingMode: "environment" },
+      {
+        fps: 10,
+        qrbox: { width: 280, height: 160 }
+      },
+      async (decodedText) => {
+        if (!html5QrCodeRef.current) return;
+        scanLockRef.current = true;
+        setIsScanning(false);
+         try {
+          await html5QrCodeRef.current?.stop().catch(() => {});
+      } catch {}
+      navigate(`/product/${decodedText}`);
+    },
+      (errorMessage) => {
+      // optional — usually fires every frame if no barcode detected
+      // console.log(errorMessage);
+  }
+    );
+  } catch (err) {
+    console.error(err);
+    setIsScanning(false);
+  }
   };
 
   return (
     <div className="h-full min-h-screen bg-black flex flex-col relative">
       {/* Camera view simulation */}
       <div className="flex-1 relative bg-gradient-to-br from-gray-800 to-gray-900">
+        <div id="barcode-camera" className="absolute inset-0 z-0"/>
         {/* Top bar */}
         <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
           <button 
