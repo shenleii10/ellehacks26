@@ -1,6 +1,8 @@
 import express from 'express';
 import { getProductByBarcode } from '../services/openFoodFacts.js';
 import { explainIngredients } from '../services/geminiService.js';
+import { evaluateDiet } from "../rules/evaluateDiet.js";
+import { evaluateAllergies } from "../rules/evaluateAllergies.js";
 
 const router = express.Router();
 
@@ -28,14 +30,28 @@ router.get('/:barcode', async (req, res) => {
   try {
     const product = await getProductByBarcode(barcode);
 
+    // test with vegan
+    const dietResult = evaluateDiet({
+      ingredients: product.ingredients,
+      diet: "vegan"
+    });
+
+    // test with milk and peanut allergies
+    const allergyResult = evaluateAllergies({
+      ingredients: product.ingredients,
+      allergies: ["milk", "peanut"]
+    });
+
     const response = {
       name: product.name || 'Unknown',
       barcode,
       ingredients: product.ingredients || [],
       warnings: [],
       allergens: product.allergens || [],
-      nutritionScore: 'N/A',
-      compatibility: {}
+      nutritionScore: 'N/A', // can fetch if you want
+      dietCheck: dietResult,
+      allergyCheck: allergyResult,
+      compatibility: {} // fill based on user profile later
     };
 
     res.json(response);
