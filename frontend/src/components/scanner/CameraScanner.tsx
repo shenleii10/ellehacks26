@@ -6,71 +6,105 @@ import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 export function CameraScanner() {
 
   const scanLockRef = useRef(false);
+  const isStartingRef = useRef(false);
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
   const [isScanning, setIsScanning] = useState(false);
+  const [cameraDenied, setCameraDenied] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-  if (!html5QrCodeRef.current) {
-    html5QrCodeRef.current = new Html5Qrcode("barcode-camera");
-  } return () => {
-    try {
-      if (html5QrCodeRef.current?.isScanning) {
-        html5QrCodeRef.current.stop().catch(() => {});
-      }
-    } catch {};
-  };
-}, []);
+    if (!html5QrCodeRef.current) {
+      html5QrCodeRef.current = new Html5Qrcode("barcode-camera");
+    } return () => {
+      try {
+        if (html5QrCodeRef.current?.isScanning) {
+          html5QrCodeRef.current.stop().catch(() => { });
+        }
+      } catch { };
+    };
+  }, []);
 
   const handleScan = async () => {
-    if (isScanning) return;
     if (!html5QrCodeRef.current) return;
-    
-  try {
-    scanLockRef.current = false;
-    setIsScanning(true);
 
-    await html5QrCodeRef.current?.start(
-      { facingMode: "environment" },
-      {
-        fps: 10,
-        qrbox: { width: 280, height: 160 }
-      },
-      async (decodedText) => {
-        if (!html5QrCodeRef.current) return;
-        scanLockRef.current = true;
-        setIsScanning(false);
-         try {
-          await html5QrCodeRef.current?.stop().catch(() => {});
-      } catch {}
-      navigate(`/product/${decodedText}`);
-    },
-      (errorMessage) => {
-      // optional — usually fires every frame if no barcode detected
-      // console.log(errorMessage);
-  }
-    );
-  } catch (err) {
-    console.error(err);
-    setIsScanning(false);
-  }
+    if (isScanning && !isStartingRef.current) {
+      try {
+        await html5QrCodeRef.current.stop().catch(() => { });
+      } catch { }
+      setIsScanning(false);
+      return;
+    }
+
+    if (isStartingRef.current) return;
+
+    try {
+      scanLockRef.current = false;
+      setCameraDenied(false);
+      setIsScanning(true);
+      isStartingRef.current = true;
+
+      await html5QrCodeRef.current?.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 280, height: 160 }
+        },
+        async (decodedText) => {
+          if (!html5QrCodeRef.current) return;
+          scanLockRef.current = true;
+          setIsScanning(false);
+          try {
+            await html5QrCodeRef.current?.stop().catch(() => { });
+          } catch { }
+          navigate(`/product/${decodedText}`);
+        },
+        (errorMessage) => {
+          // optional — usually fires every frame if no barcode detected
+          // console.log(errorMessage);
+        }
+      );
+      isStartingRef.current = false;
+    } catch (err: any) {
+      console.error("Camera error", err);
+      setIsScanning(false);
+      isStartingRef.current = false;
+
+      const message = (
+        err?.message ||
+        err?.toString?.() ||
+        "").toLowerCase();
+      const name = err?.name || "";
+
+      if (
+        name === "NotAllowedError" ||
+        name === "SecurityError" ||
+        message.includes("permission") ||
+        message.includes("denied") ||
+        message.includes("not allowed")
+      ) {
+        setCameraDenied(true);
+        alert("Camera permission is required to scan barcodes.");
+      } else {
+        alert("Unable to start camera. Please try again.");
+      }
+    }
   };
 
   return (
     <div className="h-full min-h-screen bg-black flex flex-col relative">
       {/* Camera view simulation */}
       <div className="flex-1 relative bg-gradient-to-br from-gray-800 to-gray-900">
-        <div id="barcode-camera" className="absolute inset-0 z-0"/>
+        <div id="barcode-camera" className="absolute inset-0 z-0" />
         {/* Top bar */}
         <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
-          <button 
+          <button
             onClick={() => navigate('/help')}
             className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center"
           >
             <Info className="w-5 h-5 text-white" />
           </button>
-          <button 
+          <button
             onClick={() => navigate('/profile')}
             className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center"
           >
@@ -80,15 +114,41 @@ export function CameraScanner() {
 
         {/* Scanner frame */}
         <div className="absolute inset-0 flex items-center justify-center">
+
+
           <div className="relative">
             {/* Scanning area */}
-            <div className="w-72 h-48 border-2 border-white rounded-3xl relative">
+            <div className="border-2 border-white rounded-3xl relative"
+            style={{ width: 280, height: 160 }}>
+
+              {cameraDenied && (
+                <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                  <div className="text-center px-6">
+                    <p className="text-white text-xl font-semibold mb-3">
+                      Camera Access Needed
+                    </p>
+
+                    <p className="text-gray-300 text-sm mb-6">
+                      Please allow camera access in your browser settings.
+                    </p>
+
+                    <button
+                      onClick={() => {
+                        setCameraDenied(false);
+                        handleScan(); // retry
+                      }}
+                      className="px-6 py-3 bg-emerald-500 rounded-full text-white font-semibold">
+                      Try Again
+                    </button>
+                  </div>
+                </div>
+              )}
               {/* Corner decorations */}
               <div className="absolute top-0 left-0 w-8 h-8 border-l-4 border-t-4 border-emerald-500 rounded-tl-3xl" />
               <div className="absolute top-0 right-0 w-8 h-8 border-r-4 border-t-4 border-emerald-500 rounded-tr-3xl" />
               <div className="absolute bottom-0 left-0 w-8 h-8 border-l-4 border-b-4 border-emerald-500 rounded-bl-3xl" />
               <div className="absolute bottom-0 right-0 w-8 h-8 border-r-4 border-b-4 border-emerald-500 rounded-br-3xl" />
-              
+
               {/* Scanning line animation */}
               {isScanning && (
                 <div className="absolute inset-0 overflow-hidden rounded-3xl">
@@ -124,12 +184,12 @@ export function CameraScanner() {
         {/* Scan button - Made bigger */}
         <button
           onClick={handleScan}
-          disabled={isScanning}
+          //disabled={isScanning.current}
           className={`w-28 h-28 mx-auto rounded-full flex items-center justify-center transition-all shadow-2xl ${
             isScanning
-              ? 'bg-emerald-400 scale-95'
-              : 'bg-emerald-500 active:scale-95 shadow-emerald-500/50'
-          }`}
+            ? 'bg-red-500 scale-95'
+            : 'bg-emerald-500 active:scale-95 shadow-emerald-500/50'
+            }`}
         >
           <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center">
             <ScanLine className={`w-12 h-12 text-emerald-500 ${isScanning ? 'animate-pulse' : ''}`} />
