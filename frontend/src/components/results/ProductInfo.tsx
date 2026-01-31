@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { useParams } from "react-router-dom";
 import {
@@ -13,6 +13,11 @@ import {
   MapPin,
   Sparkles
 } from 'lucide-react';
+
+// Add these to your existing imports
+import { Volume2, VolumeX } from 'lucide-react';
+import { useTextToSpeech } from '../../hooks/useTextToSpeech';
+import { generateProductSpeech, isVoiceDictionEnabled } from '../../services/textToSpeech';
 
 type Warning = {
   level: "info" | "warning";
@@ -44,6 +49,11 @@ export function ProductInfo() {
   const [aiError, setAiError] = useState("");
   const [showAiExplanations, setShowAiExplanations] = useState(false);
 
+  // Add Text-to-Speech hook
+  const { speak, stop, isPlaying, isLoading: isSpeechLoading, error: speechError } = useTextToSpeech();
+  const hasAutoPlayedRef = useRef(false);
+  // CHANGES
+
   const { barcode } = useParams();
   const navigate = useNavigate();
 
@@ -71,7 +81,30 @@ export function ProductInfo() {
     };
 
     fetchProduct();
+
+    // Reset auto-play flag when barcode changes (new product)
+    hasAutoPlayedRef.current = false;
   }, [barcode]);
+
+  // NEW EFFECT: Auto-play when product loads (if enabled in settings)
+  useEffect(() => {
+    // Only auto-play if:
+    // 1. Product data is loaded
+    // 2. Voice diction is enabled in settings
+    // 3. We haven't already auto-played for this product
+    // 4. Not currently loading speech
+    if (productData && isVoiceDictionEnabled() && !hasAutoPlayedRef.current && !isSpeechLoading) {
+      const issues = checkCompatibility();
+      const isCompatible = issues.length === 0;
+      const speechText = generateProductSpeech(productData, isCompatible, issues);
+
+      // Mark that we've auto-played
+      hasAutoPlayedRef.current = true;
+
+      // Start speaking
+      speak(speechText);
+    }
+  }, [productData, isSpeechLoading]);
 
   // Fetch AI explanations on demand
   const fetchAiExplanations = async () => {
@@ -154,6 +187,16 @@ export function ProductInfo() {
   const issues = checkCompatibility();
   const isCompatible = issues.length === 0;
 
+  // ADD: Handler for the manual speak button
+  const handleSpeak = () => {
+    if (isPlaying) {
+      stop();
+    } else if (productData) {
+      const speechText = generateProductSpeech(productData, isCompatible, issues);
+      speak(speechText);
+    }
+  };
+
   if (loading) return <p className="p-6 text-gray-700 dark:text-gray-300">Loading product...</p>;
   if (error) return <p className="p-6 text-red-600 dark:text-red-400">{error}</p>;
   if (!productData) return null;
@@ -174,6 +217,26 @@ export function ProductInfo() {
             <h1 className="font-semibold text-gray-900 dark:text-white">Product Details</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">Scan completed</p>
           </div>
+
+          {/* Text-to-Speech Button */}
+          <button
+            onClick={handleSpeak}
+            disabled={isSpeechLoading}
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isPlaying
+                ? 'bg-emerald-500 text-white'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            title={isPlaying ? 'Stop reading' : 'Read product info'}
+          >
+            {isSpeechLoading ? (
+              <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+            ) : isPlaying ? (
+              <VolumeX className="w-5 h-5" />
+            ) : (
+              <Volume2 className="w-5 h-5" />
+            )}
+          </button>
+
           <div className={`px-3 py-1 rounded-full text-xs font-bold ${productData.nutritionScore === 'A'
               ? 'bg-emerald-500 text-white'
               : 'bg-yellow-500 text-white'
@@ -181,6 +244,9 @@ export function ProductInfo() {
             Score: {productData.nutritionScore}
           </div>
         </div>
+        
+
+
 
         {/* Product Image & Info */}
         <div className="p-6 lg:h-[calc(100vh-81px)] lg:overflow-auto">
