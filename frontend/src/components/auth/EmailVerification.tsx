@@ -50,12 +50,12 @@ export function EmailVerification() {
   const email = localStorage.getItem('userEmail') || 'your email';
 
   return (
-    <div className="h-full min-h-screen bg-gradient-to-br from-emerald-50 to-white flex flex-col">
+    <div className="h-full min-h-screen bg-gradient-to-br from-emerald-50 to-white dark:from-gray-900 dark:to-gray-950 flex flex-col">
       {/* Back button */}
       <div className="p-6">
         <button 
           onClick={() => navigate('/auth')}
-          className="flex items-center gap-1 text-gray-600 text-sm font-medium"
+          className="flex items-center gap-1 text-gray-600 dark:text-gray-400 text-sm font-medium"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
@@ -68,20 +68,20 @@ export function EmailVerification() {
           <div className="bg-emerald-500 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <Mail className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Check Your Email
           </h1>
-          <p className="text-gray-600 px-4">
+          <p className="text-gray-600 dark:text-gray-400 px-4">
             We've sent a 6-digit verification code to
           </p>
-          <p className="text-emerald-600 font-semibold mt-1">
+          <p className="text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
             {email}
           </p>
         </div>
 
         {/* Code Input */}
         <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-700 mb-3 text-center">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 text-center">
             Enter Verification Code
           </label>
           <div className="flex gap-2 justify-center">
@@ -95,7 +95,7 @@ export function EmailVerification() {
                 value={digit}
                 onChange={(e) => handleCodeChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-12 h-14 text-center text-2xl font-bold bg-white border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors"
+                className="w-12 h-14 text-center text-2xl font-bold bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-emerald-500 focus:outline-none transition-colors text-gray-900 dark:text-white"
               />
             ))}
           </div>
@@ -108,7 +108,7 @@ export function EmailVerification() {
           className={`w-full py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 shadow-lg transition-all ${
             isComplete
               ? 'bg-emerald-500 text-white shadow-emerald-500/30 active:scale-95'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : 'bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
           }`}
         >
           Verify Email
@@ -118,13 +118,13 @@ export function EmailVerification() {
         {/* Resend */}
         <div className="mt-6 text-center">
           {resendTimer > 0 ? (
-            <p className="text-gray-500 text-sm">
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
               Resend code in {resendTimer}s
             </p>
           ) : (
             <button
               onClick={handleResend}
-              className="text-emerald-600 font-medium text-sm"
+              className="text-emerald-600 dark:text-emerald-400 font-medium text-sm"
             >
               Resend Code
             </button>

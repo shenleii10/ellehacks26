@@ -9,7 +9,8 @@ import {
   Leaf,
   Ban,
   Settings,
-  ChevronRight
+  ChevronRight,
+  Edit
 } from 'lucide-react';
 
 export function ProfilePage() {
@@ -18,9 +19,9 @@ export function ProfilePage() {
   const email = localStorage.getItem('userEmail') || 'user@example.com';
 
   return (
-    <div className="h-full min-h-screen bg-gray-50 flex flex-col">
+    <div className="h-full min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       {/* Header */}
-      <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-6 pb-8">
+      <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 p-6 pb-8">
         <button 
           onClick={() => navigate('/scanner')}
           className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center mb-6"
@@ -43,19 +44,35 @@ export function ProfilePage() {
 
       {/* Content */}
       <div className="flex-1 overflow-auto">
+        {/* Edit Profile Button */}
+        <div className="px-6 py-4">
+          <button
+            onClick={() => navigate('/edit-profile')}
+            className="w-full bg-white dark:bg-gray-950 p-4 rounded-2xl flex items-center justify-between shadow-sm border border-gray-200 dark:border-gray-800 active:scale-95 transition-transform"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/50 rounded-full flex items-center justify-center">
+                <Edit className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <span className="font-semibold text-gray-900 dark:text-white">Edit Health Profile</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-400 dark:text-gray-600" />
+          </button>
+        </div>
+
         {/* Basic Info */}
-        <div className="bg-white px-6 py-4 mb-2">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+        <div className="bg-white dark:bg-gray-950 px-6 py-4 mb-2">
+          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Basic Information
           </h3>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <Calendar className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-700">Age: {profile.age || 'Not set'}</span>
+              <Calendar className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+              <span className="text-gray-700 dark:text-gray-300">Age: {profile.age || 'Not set'}</span>
             </div>
             <div className="flex items-center gap-3">
-              <MapPin className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-700">{profile.country || 'Not set'}</span>
+              <MapPin className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+              <span className="text-gray-700 dark:text-gray-300">{profile.country || 'Not set'}</span>
             </div>
           </div>
         </div>
@@ -132,15 +149,15 @@ export function ProfilePage() {
         <div className="px-6 py-4">
           <button
             onClick={() => navigate('/settings')}
-            className="w-full bg-white p-4 rounded-2xl flex items-center justify-between shadow-sm border border-gray-200 active:scale-95 transition-transform"
+            className="w-full bg-white dark:bg-gray-950 p-4 rounded-2xl flex items-center justify-between shadow-sm border border-gray-200 dark:border-gray-800 active:scale-95 transition-transform"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                <Settings className="w-5 h-5 text-gray-600" />
+              <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               </div>
-              <span className="font-semibold text-gray-900">Settings</span>
+              <span className="font-semibold text-gray-900 dark:text-white">Settings</span>
             </div>
-            <ChevronRight className="w-5 h-5 text-gray-400" />
+            <ChevronRight className="w-5 h-5 text-gray-400 dark:text-gray-600" />
           </button>
         </div>
       </div>

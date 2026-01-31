@@ -58,17 +58,44 @@ export function ProductInfo() {
 
   // Get user profile
   const profileStr = localStorage.getItem('userProfile');
-  const profile = profileStr ? JSON.parse(profileStr) : { dietaryRestrictions: [] };
+  const profile = profileStr ? JSON.parse(profileStr) : {};
 
   // Check compatibility
   const checkCompatibility = () => {
     const issues: string[] = [];
-    profile.dietaryRestrictions.forEach((restriction: string) => {
-      const restrictionKey = restriction as keyof typeof productData.compatibility;
-      if (productData.compatibility[restrictionKey] === false) {
-        issues.push(restriction);
-      }
-    });
+    
+    // Check allergies
+    if (profile.allergies && Array.isArray(profile.allergies)) {
+      profile.allergies.forEach((allergy: string) => {
+        if (productData.ingredients.some((ing: string) => 
+          ing.toLowerCase().includes(allergy.toLowerCase())
+        )) {
+          issues.push(`Contains ${allergy}`);
+        }
+      });
+    }
+    
+    // Check diet types
+    if (profile.dietTypes && Array.isArray(profile.dietTypes)) {
+      profile.dietTypes.forEach((dietType: string) => {
+        const restrictionKey = dietType as keyof typeof productData.compatibility;
+        if (productData.compatibility[restrictionKey] === false) {
+          issues.push(`Not ${dietType}`);
+        }
+      });
+    }
+    
+    // Check ingredients to avoid
+    if (profile.ingredientsToAvoid && Array.isArray(profile.ingredientsToAvoid)) {
+      profile.ingredientsToAvoid.forEach((ingredient: string) => {
+        if (productData.ingredients.some((ing: string) => 
+          ing.toLowerCase().includes(ingredient.toLowerCase())
+        )) {
+          issues.push(`Contains ${ingredient}`);
+        }
+      });
+    }
+    
     return issues;
   };
 
@@ -76,53 +103,52 @@ export function ProductInfo() {
   const isCompatible = issues.length === 0;
 
   return (
-    <div className="h-full min-h-screen bg-gray-50 flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 p-4 flex items-center gap-3">
-        <button 
-          onClick={() => navigate('/scanner')}
-          className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-700" />
-        </button>
-        <div className="flex-1">
-          <h1 className="font-semibold text-gray-900">Product Details</h1>
-          <p className="text-sm text-gray-500">Scan completed</p>
+    <div className="h-full min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col lg:flex-row overflow-hidden">
+      {/* Desktop Left Column - Product Overview */}
+      <div className="lg:w-2/5 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800">
+        {/* Header */}
+        <div className="border-b border-gray-200 dark:border-gray-800 p-4 flex items-center gap-3">
+          <button 
+            onClick={() => navigate('/scanner')}
+            className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+          </button>
+          <div className="flex-1">
+            <h1 className="font-semibold text-gray-900 dark:text-white">Product Details</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Scan completed</p>
+          </div>
+          <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+            productData.nutritionScore === 'A' 
+              ? 'bg-emerald-500 text-white'
+              : 'bg-yellow-500 text-white'
+          }`}>
+            Score: {productData.nutritionScore}
+          </div>
         </div>
-        <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-          productData.nutritionScore === 'A' 
-            ? 'bg-emerald-500 text-white'
-            : 'bg-yellow-500 text-white'
-        }`}>
-          Score: {productData.nutritionScore}
-        </div>
-      </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto">
-        {/* Product image and basic info */}
-        <div className="bg-white p-6">
-          <div className="flex gap-4">
+        {/* Product Image & Info - Takes full height on desktop */}
+        <div className="p-6 lg:h-[calc(100vh-81px)] lg:overflow-auto">
+          {/* Product image - larger on desktop */}
+          <div className="flex flex-col lg:items-center gap-4 mb-6">
             <img 
               src={productData.image}
               alt={productData.name}
-              className="w-24 h-24 rounded-xl object-cover"
+              className="w-full lg:w-64 h-48 lg:h-64 rounded-2xl object-cover"
             />
-            <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">
+            <div className="w-full lg:text-center">
+              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 {productData.name}
               </h2>
-              <p className="text-gray-600 mb-2">{productData.brand}</p>
-              <p className="text-xs text-gray-400 font-mono">
+              <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">{productData.brand}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 font-mono">
                 {productData.barcode}
               </p>
             </div>
           </div>
-        </div>
 
-        {/* Compatibility status */}
-        <div className="px-6 py-4">
-          <div className={`p-4 rounded-2xl flex items-start gap-3 ${
+          {/* Compatibility Status */}
+          <div className={`p-4 lg:p-5 rounded-2xl flex items-start gap-3 ${
             isCompatible 
               ? 'bg-emerald-50 border-2 border-emerald-200'
               : 'bg-red-50 border-2 border-red-200'
@@ -133,12 +159,12 @@ export function ProductInfo() {
               <XCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
             )}
             <div className="flex-1">
-              <h3 className={`font-semibold mb-1 ${
+              <h3 className={`font-semibold lg:text-lg mb-1 ${
                 isCompatible ? 'text-emerald-900' : 'text-red-900'
               }`}>
                 {isCompatible ? 'Safe for Your Diet!' : 'Dietary Warning'}
               </h3>
-              <p className={`text-sm ${
+              <p className={`text-sm lg:text-base ${
                 isCompatible ? 'text-emerald-700' : 'text-red-700'
               }`}>
                 {isCompatible 
@@ -149,112 +175,127 @@ export function ProductInfo() {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Warnings */}
-        {productData.warnings.length > 0 && (
-          <div className="px-6 pb-4">
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              Safety Alerts
+      {/* Right Column - Details (Mobile full width, Desktop right side) */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-6 space-y-6">
+          {/* Warnings */}
+          {productData.warnings.length > 0 && (
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2 text-lg">
+                <Shield className="w-5 h-5" />
+                Safety Alerts
+              </h3>
+              <div className="space-y-3">
+                {productData.warnings.map((warning, index) => (
+                  <div 
+                    key={index}
+                    className={`p-4 rounded-xl flex gap-3 ${
+                      warning.level === 'warning'
+                        ? 'bg-yellow-50 border border-yellow-200'
+                        : 'bg-blue-50 border border-blue-200'
+                    }`}
+                  >
+                    <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${
+                      warning.level === 'warning' ? 'text-yellow-600' : 'text-blue-600'
+                    }`} />
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-white mb-1">
+                        {warning.title}
+                      </h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {warning.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Ingredients */}
+          <div>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2 text-lg">
+              <Leaf className="w-5 h-5" />
+              Ingredients
             </h3>
-            <div className="space-y-2">
-              {productData.warnings.map((warning, index) => (
+            <div className="bg-white dark:bg-gray-950 rounded-2xl p-4 lg:p-5 border border-gray-200 dark:border-gray-800">
+              <div className="flex flex-wrap gap-2">
+                {(showAllIngredients ? productData.ingredients : productData.ingredients.slice(0, 4)).map((ingredient, index) => (
+                  <span 
+                    key={index}
+                    className="px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm text-gray-700 dark:text-gray-300"
+                  >
+                    {ingredient}
+                  </span>
+                ))}
+              </div>
+              {productData.ingredients.length > 4 && (
+                <button
+                  onClick={() => setShowAllIngredients(!showAllIngredients)}
+                  className="mt-3 text-sm text-emerald-600 font-medium flex items-center gap-1 hover:text-emerald-700"
+                >
+                  {showAllIngredients ? (
+                    <>Show Less <ChevronUp className="w-4 h-4" /></>
+                  ) : (
+                    <>Show All {productData.ingredients.length} Ingredients <ChevronDown className="w-4 h-4" /></>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Dietary Compatibility Grid */}
+          <div>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2 text-lg">
+              <MapPin className="w-5 h-5" />
+              Dietary Compatibility
+            </h3>
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {Object.entries(productData.compatibility).map(([key, value]) => (
                 <div 
-                  key={index}
-                  className={`p-4 rounded-xl flex gap-3 ${
-                    warning.level === 'warning'
-                      ? 'bg-yellow-50 border border-yellow-200'
-                      : 'bg-blue-50 border border-blue-200'
+                  key={key}
+                  className={`p-3 lg:p-4 rounded-xl border-2 ${
+                    value
+                      ? 'bg-emerald-50 border-emerald-200'
+                      : 'bg-gray-50 border-gray-200'
                   }`}
                 >
-                  <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${
-                    warning.level === 'warning' ? 'text-yellow-600' : 'text-blue-600'
-                  }`} />
-                  <div>
-                    <h4 className="font-medium text-gray-900 text-sm mb-1">
-                      {warning.title}
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      {warning.description}
-                    </p>
+                  <div className="flex items-center gap-2">
+                    {value ? (
+                      <CheckCircle className="w-4 h-4 text-emerald-600" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-gray-400" />
+                    )}
+                    <span className={`text-sm font-medium capitalize ${
+                      value ? 'text-emerald-900' : 'text-gray-500'
+                    }`}>
+                      {key.replace(/([A-Z])/g, ' $1').trim()}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        )}
 
-        {/* Ingredients */}
-        <div className="px-6 pb-4">
-          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <Leaf className="w-5 h-5" />
-            Ingredients
-          </h3>
-          <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <div className="flex flex-wrap gap-2">
-              {(showAllIngredients ? productData.ingredients : productData.ingredients.slice(0, 4)).map((ingredient, index) => (
-                <span 
-                  key={index}
-                  className="px-3 py-1.5 bg-gray-100 rounded-lg text-sm text-gray-700"
-                >
-                  {ingredient}
-                </span>
-              ))}
-            </div>
-            {productData.ingredients.length > 4 && (
-              <button
-                onClick={() => setShowAllIngredients(!showAllIngredients)}
-                className="mt-3 text-sm text-emerald-600 font-medium flex items-center gap-1"
-              >
-                {showAllIngredients ? (
-                  <>Show Less <ChevronUp className="w-4 h-4" /></>
-                ) : (
-                  <>Show All {productData.ingredients.length} Ingredients <ChevronDown className="w-4 h-4" /></>
-                )}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Dietary Compatibility Grid */}
-        <div className="px-6 pb-6">
-          <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <MapPin className="w-5 h-5" />
-            Dietary Compatibility
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-            {Object.entries(productData.compatibility).map(([key, value]) => (
-              <div 
-                key={key}
-                className={`p-3 rounded-xl border-2 ${
-                  value
-                    ? 'bg-emerald-50 border-emerald-200'
-                    : 'bg-gray-50 border-gray-200'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  {value ? (
-                    <CheckCircle className="w-4 h-4 text-emerald-600" />
-                  ) : (
-                    <XCircle className="w-4 h-4 text-gray-400" />
-                  )}
-                  <span className={`text-sm font-medium capitalize ${
-                    value ? 'text-emerald-900' : 'text-gray-500'
-                  }`}>
-                    {key.replace(/([A-Z])/g, ' $1').trim()}
-                  </span>
-                </div>
-              </div>
-            ))}
+          {/* Bottom action - Mobile only, desktop has it fixed */}
+          <div className="lg:hidden">
+            <button
+              onClick={() => navigate('/scanner')}
+              className="w-full bg-emerald-500 text-white py-4 rounded-2xl font-semibold shadow-lg shadow-emerald-500/30 active:scale-95 transition-transform"
+            >
+              Scan Another Product
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Bottom action */}
-      <div className="bg-white border-t border-gray-200 p-4">
+      {/* Fixed bottom button for desktop */}
+      <div className="hidden lg:block fixed bottom-6 right-6">
         <button
           onClick={() => navigate('/scanner')}
-          className="w-full bg-emerald-500 text-white py-4 rounded-2xl font-semibold shadow-lg shadow-emerald-500/30 active:scale-95 transition-transform"
+          className="bg-emerald-500 text-white px-8 py-4 rounded-2xl font-semibold shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all"
         >
           Scan Another Product
         </button>

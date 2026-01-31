@@ -8,6 +8,7 @@ import { ProfileSetupStep3 } from "./components/profile/ProfileSetupStep3";
 import { CameraScanner } from "./components/scanner/CameraScanner";
 import { ProductInfo } from "./components/results/ProductInfo";
 import { ProfilePage } from "./components/profile/ProfilePage";
+import { EditProfile } from "./components/profile/EditProfile";
 import { SettingsPage } from "./components/profile/SettingsPage";
 import { AppHelp } from "./components/profile/AppHelp";
 
@@ -47,6 +48,10 @@ export const router = createBrowserRouter([
   {
     path: "/profile",
     Component: ProfilePage,
+  },
+  {
+    path: "/edit-profile",
+    Component: EditProfile,
   },
   {
     path: "/settings",
