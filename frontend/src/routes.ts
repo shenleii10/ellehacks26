@@ -12,6 +12,7 @@ import { EditProfile } from "./components/profile/EditProfile";
 import { SettingsPage } from "./components/profile/SettingsPage";
 import { AppHelp } from "./components/profile/AppHelp";
 
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -42,7 +43,7 @@ export const router = createBrowserRouter([
     Component: CameraScanner,
   },
   {
-    path: "/product/:id",
+    path: "/product/:barcode",
     Component: ProductInfo,
   },
   {

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { 
-  ArrowLeft, 
-  CheckCircle, 
-  AlertTriangle, 
+import { useParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  CheckCircle,
+  AlertTriangle,
   XCircle,
   ChevronDown,
   ChevronUp,
@@ -12,8 +13,27 @@ import {
   MapPin
 } from 'lucide-react';
 
+type Warning = {
+  level: "info" | "warning";
+  title: string;
+  description: string;
+};
+
+type Product = {
+  name: string;
+  brand: string;
+  barcode: string;
+  image: string;
+  ingredients: string[];
+  warnings: Warning[];
+  nutritionScore: string;
+  compatibility: Record<string, boolean>;
+  rawIngredientsText?: string;
+};
+
+
 // Mock product data
-const productData = {
+/*const productData = {
   name: "Organic Granola Bar",
   brand: "Nature's Best",
   barcode: "012345678901",
@@ -50,31 +70,69 @@ const productData = {
     kosher: true,
     keto: false
   }
-};
+};*/
 
 export function ProductInfo() {
   const [showAllIngredients, setShowAllIngredients] = useState(false);
+  const [productData, setProductData] = useState<Product | null>(null); // will hold the fetched product
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const { barcode } = useParams();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log("Barcode from URL:", barcode);
+    if (!barcode) return;
+
+    const fetchProduct = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const res = await fetch(`http://localhost:3001/api/product/${barcode}`);
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.message || 'Product not found');
+        }
+        const data = await res.json();
+        setProductData(data);
+      } catch (err: any) {
+        setError(err.message || "Error fetching product");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [barcode]);
+
+  type UserProfile = {
+  allergies?: string[];
+  dietTypes?: (keyof Product['compatibility'])[];
+  ingredientsToAvoid?: string[];
+};
 
   // Get user profile
   const profileStr = localStorage.getItem('userProfile');
-  const profile = profileStr ? JSON.parse(profileStr) : {};
+  const profile: UserProfile = profileStr ? JSON.parse(profileStr) : {};
 
   // Check compatibility
   const checkCompatibility = () => {
+    if (!productData) return [];
     const issues: string[] = [];
-    
+
     // Check allergies
     if (profile.allergies && Array.isArray(profile.allergies)) {
       profile.allergies.forEach((allergy: string) => {
-        if (productData.ingredients.some((ing: string) => 
+        if (productData.ingredients.some((ing: string) =>
           ing.toLowerCase().includes(allergy.toLowerCase())
         )) {
           issues.push(`Contains ${allergy}`);
         }
       });
     }
-    
+
     // Check diet types
     if (profile.dietTypes && Array.isArray(profile.dietTypes)) {
       profile.dietTypes.forEach((dietType: string) => {
@@ -84,23 +142,27 @@ export function ProductInfo() {
         }
       });
     }
-    
+
     // Check ingredients to avoid
     if (profile.ingredientsToAvoid && Array.isArray(profile.ingredientsToAvoid)) {
       profile.ingredientsToAvoid.forEach((ingredient: string) => {
-        if (productData.ingredients.some((ing: string) => 
+        if (productData.ingredients.some((ing: string) =>
           ing.toLowerCase().includes(ingredient.toLowerCase())
         )) {
           issues.push(`Contains ${ingredient}`);
         }
       });
     }
-    
+
     return issues;
   };
 
   const issues = checkCompatibility();
   const isCompatible = issues.length === 0;
+
+  if (loading) return <p className="p-6 text-gray-700 dark:text-gray-300">Loading product...</p>;
+  if (error) return <p className="p-6 text-red-600 dark:text-red-400">{error}</p>;
+  if (!productData) return null;
 
   return (
     <div className="h-full min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col lg:flex-row overflow-hidden">
@@ -108,7 +170,7 @@ export function ProductInfo() {
       <div className="lg:w-2/5 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800">
         {/* Header */}
         <div className="border-b border-gray-200 dark:border-gray-800 p-4 flex items-center gap-3">
-          <button 
+          <button
             onClick={() => navigate('/scanner')}
             className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"
           >
@@ -118,11 +180,10 @@ export function ProductInfo() {
             <h1 className="font-semibold text-gray-900 dark:text-white">Product Details</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">Scan completed</p>
           </div>
-          <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-            productData.nutritionScore === 'A' 
+          <div className={`px-3 py-1 rounded-full text-xs font-bold ${productData.nutritionScore === 'A'
               ? 'bg-emerald-500 text-white'
               : 'bg-yellow-500 text-white'
-          }`}>
+            }`}>
             Score: {productData.nutritionScore}
           </div>
         </div>
@@ -131,7 +192,7 @@ export function ProductInfo() {
         <div className="p-6 lg:h-[calc(100vh-81px)] lg:overflow-auto">
           {/* Product image - larger on desktop */}
           <div className="flex flex-col lg:items-center gap-4 mb-6">
-            <img 
+            <img
               src={productData.image}
               alt={productData.name}
               className="w-full lg:w-64 h-48 lg:h-64 rounded-2xl object-cover"
@@ -148,26 +209,23 @@ export function ProductInfo() {
           </div>
 
           {/* Compatibility Status */}
-          <div className={`p-4 lg:p-5 rounded-2xl flex items-start gap-3 ${
-            isCompatible 
+          <div className={`p-4 lg:p-5 rounded-2xl flex items-start gap-3 ${isCompatible
               ? 'bg-emerald-50 border-2 border-emerald-200'
               : 'bg-red-50 border-2 border-red-200'
-          }`}>
+            }`}>
             {isCompatible ? (
               <CheckCircle className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
             ) : (
               <XCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
             )}
             <div className="flex-1">
-              <h3 className={`font-semibold lg:text-lg mb-1 ${
-                isCompatible ? 'text-emerald-900' : 'text-red-900'
-              }`}>
+              <h3 className={`font-semibold lg:text-lg mb-1 ${isCompatible ? 'text-emerald-900' : 'text-red-900'
+                }`}>
                 {isCompatible ? 'Safe for Your Diet!' : 'Dietary Warning'}
               </h3>
-              <p className={`text-sm lg:text-base ${
-                isCompatible ? 'text-emerald-700' : 'text-red-700'
-              }`}>
-                {isCompatible 
+              <p className={`text-sm lg:text-base ${isCompatible ? 'text-emerald-700' : 'text-red-700'
+                }`}>
+                {isCompatible
                   ? 'This product matches all your dietary preferences'
                   : `Not suitable for: ${issues.join(', ')}`
                 }
@@ -188,18 +246,16 @@ export function ProductInfo() {
                 Safety Alerts
               </h3>
               <div className="space-y-3">
-                {productData.warnings.map((warning, index) => (
-                  <div 
+                {productData.warnings.map((warning: Warning, index: number) => (
+                  <div
                     key={index}
-                    className={`p-4 rounded-xl flex gap-3 ${
-                      warning.level === 'warning'
+                    className={`p-4 rounded-xl flex gap-3 ${warning.level === 'warning'
                         ? 'bg-yellow-50 border border-yellow-200'
                         : 'bg-blue-50 border border-blue-200'
-                    }`}
+                      }`}
                   >
-                    <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${
-                      warning.level === 'warning' ? 'text-yellow-600' : 'text-blue-600'
-                    }`} />
+                    <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${warning.level === 'warning' ? 'text-yellow-600' : 'text-blue-600'
+                      }`} />
                     <div>
                       <h4 className="font-medium text-gray-900 dark:text-white mb-1">
                         {warning.title}
@@ -222,8 +278,8 @@ export function ProductInfo() {
             </h3>
             <div className="bg-white dark:bg-gray-950 rounded-2xl p-4 lg:p-5 border border-gray-200 dark:border-gray-800">
               <div className="flex flex-wrap gap-2">
-                {(showAllIngredients ? productData.ingredients : productData.ingredients.slice(0, 4)).map((ingredient, index) => (
-                  <span 
+                {(showAllIngredients ? productData.ingredients : productData.ingredients.slice(0, 4)).map((ingredient: string, index: number) => (
+                  <span
                     key={index}
                     className="px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm text-gray-700 dark:text-gray-300"
                   >
@@ -254,13 +310,12 @@ export function ProductInfo() {
             </h3>
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
               {Object.entries(productData.compatibility).map(([key, value]) => (
-                <div 
+                <div
                   key={key}
-                  className={`p-3 lg:p-4 rounded-xl border-2 ${
-                    value
+                  className={`p-3 lg:p-4 rounded-xl border-2 ${value
                       ? 'bg-emerald-50 border-emerald-200'
                       : 'bg-gray-50 border-gray-200'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     {value ? (
@@ -268,9 +323,8 @@ export function ProductInfo() {
                     ) : (
                       <XCircle className="w-4 h-4 text-gray-400" />
                     )}
-                    <span className={`text-sm font-medium capitalize ${
-                      value ? 'text-emerald-900' : 'text-gray-500'
-                    }`}>
+                    <span className={`text-sm font-medium capitalize ${value ? 'text-emerald-900' : 'text-gray-500'
+                      }`}>
                       {key.replace(/([A-Z])/g, ' $1').trim()}
                     </span>
                   </div>
