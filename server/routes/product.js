@@ -1,7 +1,24 @@
 import express from 'express';
-import { getProductByBarcode } from '../services/openFoodFacts.js'; // adjust path if needed
+import { getProductByBarcode } from '../services/openFoodFacts.js';
+import { explainIngredients } from '../services/geminiService.js';
 
 const router = express.Router();
+
+router.post('/explain-ingredients', async (req, res) => {
+  const { ingredients } = req.body;
+
+  if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
+    return res.status(400).json({ message: 'Please provide a non-empty ingredients array' });
+  }
+
+  try {
+    const explanations = await explainIngredients(ingredients);
+    res.json({ explanations });
+  } catch (err) {
+    console.error('Gemini explain error:', err);
+    res.status(500).json({ message: err.message || 'Failed to explain ingredients' });
+  }
+});
 
 router.get('/:barcode', async (req, res) => {
   const { barcode } = req.params;
@@ -11,15 +28,14 @@ router.get('/:barcode', async (req, res) => {
   try {
     const product = await getProductByBarcode(barcode);
 
-    // Optionally transform or add more fields
     const response = {
       name: product.name || 'Unknown',
       barcode,
       ingredients: product.ingredients || [],
-      warnings: [], // add later if needed
+      warnings: [],
       allergens: product.allergens || [],
-      nutritionScore: 'N/A', // can fetch if you want
-      compatibility: {} // fill based on user profile later
+      nutritionScore: 'N/A',
+      compatibility: {}
     };
 
     res.json(response);

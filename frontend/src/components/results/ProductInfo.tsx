@@ -10,7 +10,8 @@ import {
   ChevronUp,
   Leaf,
   Shield,
-  MapPin
+  MapPin,
+  Sparkles
 } from 'lucide-react';
 
 type Warning = {
@@ -31,52 +32,17 @@ type Product = {
   rawIngredientsText?: string;
 };
 
-
-// Mock product data
-/*const productData = {
-  name: "Organic Granola Bar",
-  brand: "Nature's Best",
-  barcode: "012345678901",
-  image: "https://images.unsplash.com/photo-1590301157890-4810ed352733?w=400",
-  ingredients: [
-    "Organic Rolled Oats",
-    "Organic Honey",
-    "Organic Almonds",
-    "Organic Dark Chocolate (Contains Soy Lecithin)",
-    "Organic Coconut Oil",
-    "Sea Salt",
-    "Natural Vanilla Extract"
-  ],
-  warnings: [
-    {
-      level: "info",
-      title: "Contains Tree Nuts",
-      description: "This product contains almonds"
-    },
-    {
-      level: "warning",
-      title: "Contains Soy",
-      description: "Soy lecithin found in chocolate"
-    }
-  ],
-  nutritionScore: "A",
-  compatibility: {
-    vegetarian: true,
-    vegan: false,
-    glutenFree: true,
-    dairyFree: true,
-    nutFree: false,
-    halal: true,
-    kosher: true,
-    keto: false
-  }
-};*/
-
 export function ProductInfo() {
   const [showAllIngredients, setShowAllIngredients] = useState(false);
-  const [productData, setProductData] = useState<Product | null>(null); // will hold the fetched product
+  const [productData, setProductData] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // AI ingredient explanations
+  const [aiExplanations, setAiExplanations] = useState<Record<string, string>>({});
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const [showAiExplanations, setShowAiExplanations] = useState(false);
 
   const { barcode } = useParams();
   const navigate = useNavigate();
@@ -107,22 +73,52 @@ export function ProductInfo() {
     fetchProduct();
   }, [barcode]);
 
-  type UserProfile = {
-  allergies?: string[];
-  dietTypes?: (keyof Product['compatibility'])[];
-  ingredientsToAvoid?: string[];
-};
+  // Fetch AI explanations on demand
+  const fetchAiExplanations = async () => {
+    if (!productData || productData.ingredients.length === 0) return;
+    if (Object.keys(aiExplanations).length > 0) {
+      setShowAiExplanations(true);
+      return;
+    }
 
-  // Get user profile
+    setAiLoading(true);
+    setAiError("");
+
+    try {
+      const res = await fetch('http://localhost:3001/api/product/explain-ingredients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingredients: productData.ingredients })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || 'Failed to get explanations');
+      }
+
+      const data = await res.json();
+      setAiExplanations(data.explanations || {});
+      setShowAiExplanations(true);
+    } catch (err: any) {
+      setAiError(err.message || 'AI explanation unavailable');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  type UserProfile = {
+    allergies?: string[];
+    dietTypes?: (keyof Product['compatibility'])[];
+    ingredientsToAvoid?: string[];
+  };
+
   const profileStr = localStorage.getItem('userProfile');
   const profile: UserProfile = profileStr ? JSON.parse(profileStr) : {};
 
-  // Check compatibility
   const checkCompatibility = () => {
     if (!productData) return [];
     const issues: string[] = [];
 
-    // Check allergies
     if (profile.allergies && Array.isArray(profile.allergies)) {
       profile.allergies.forEach((allergy: string) => {
         if (productData.ingredients.some((ing: string) =>
@@ -133,7 +129,6 @@ export function ProductInfo() {
       });
     }
 
-    // Check diet types
     if (profile.dietTypes && Array.isArray(profile.dietTypes)) {
       profile.dietTypes.forEach((dietType: string) => {
         const restrictionKey = dietType as keyof typeof productData.compatibility;
@@ -143,7 +138,6 @@ export function ProductInfo() {
       });
     }
 
-    // Check ingredients to avoid
     if (profile.ingredientsToAvoid && Array.isArray(profile.ingredientsToAvoid)) {
       profile.ingredientsToAvoid.forEach((ingredient: string) => {
         if (productData.ingredients.some((ing: string) =>
@@ -188,9 +182,8 @@ export function ProductInfo() {
           </div>
         </div>
 
-        {/* Product Image & Info - Takes full height on desktop */}
+        {/* Product Image & Info */}
         <div className="p-6 lg:h-[calc(100vh-81px)] lg:overflow-auto">
-          {/* Product image - larger on desktop */}
           <div className="flex flex-col lg:items-center gap-4 mb-6">
             <img
               src={productData.image}
@@ -235,7 +228,7 @@ export function ProductInfo() {
         </div>
       </div>
 
-      {/* Right Column - Details (Mobile full width, Desktop right side) */}
+      {/* Right Column - Details */}
       <div className="flex-1 overflow-auto">
         <div className="p-6 space-y-6">
           {/* Warnings */}
@@ -299,6 +292,55 @@ export function ProductInfo() {
                   )}
                 </button>
               )}
+
+              {/* AI Explain Button */}
+              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                {!showAiExplanations && (
+                  <button
+                    onClick={fetchAiExplanations}
+                    disabled={aiLoading}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl text-sm font-semibold hover:from-emerald-600 hover:to-teal-600 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-sm"
+                  >
+                    <Sparkles className={`w-4 h-4 ${aiLoading ? 'animate-spin' : ''}`} />
+                    {aiLoading ? 'Analyzing...' : 'AI Explain Ingredients'}
+                  </button>
+                )}
+
+                {aiError && (
+                  <p className="text-sm text-red-500 mt-2">{aiError}</p>
+                )}
+
+                {/* AI Explanations Panel */}
+                {showAiExplanations && Object.keys(aiExplanations).length > 0 && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" /> AI-Powered Ingredient Guide
+                      </p>
+                      <button
+                        onClick={() => setShowAiExplanations(false)}
+                        className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      >
+                        Hide
+                      </button>
+                    </div>
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                      {productData.ingredients.map((ingredient: string, index: number) => {
+                        const explanation = Object.entries(aiExplanations).find(
+                          ([key]) => key.toLowerCase() === ingredient.toLowerCase()
+                        )?.[1];
+                        if (!explanation) return null;
+                        return (
+                          <div key={index} className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-lg p-3">
+                            <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 mb-0.5">{ingredient}</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">{explanation}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -333,7 +375,7 @@ export function ProductInfo() {
             </div>
           </div>
 
-          {/* Bottom action - Mobile only, desktop has it fixed */}
+          {/* Bottom action - Mobile only */}
           <div className="lg:hidden">
             <button
               onClick={() => navigate('/scanner')}

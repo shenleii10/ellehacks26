@@ -1,6 +1,5 @@
 import { normalizeIngredients } from '../utils/normalizeIngredients.js';
 import { getCached, setCached } from './cache.js';
-import fetch from "node-fetch";
 
 export async function getProductByBarcode(barcode) {
   const cached = getCached(barcode);
