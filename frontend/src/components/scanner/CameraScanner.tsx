@@ -179,7 +179,7 @@ export function CameraScanner() {
           />
 
           {/* Top bar - Mobile Only */}
-          <div className="lg:hidden absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
+          <div className="lg:hidden absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-20">
             <button
               onClick={() => navigate('/help')}
               className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center"
@@ -256,7 +256,7 @@ export function CameraScanner() {
         </div>
 
         {/* Bottom controls — shrink-0 prevents flex from squishing it, so h-[500px] sticks */}
-        <div className="shrink-0 h-[800px] bg-gradient-to-t from-black to-transparent flex flex-col items-center justify-center gap-4 lg:gap-6 p-8 lg:p-12">
+        <div className="shrink-0 h-[320px] lg:h-[800px] bg-gradient-to-t from-black to-transparent flex flex-col items-center justify-center gap-4 lg:gap-6 p-8 lg:p-12">
           {/* Scan button - Bigger on desktop */}
           <button
             onClick={handleScan}
