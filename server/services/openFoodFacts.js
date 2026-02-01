@@ -7,7 +7,7 @@ export async function getProductByBarcode(barcode) {
 
   const res = await fetch(
     `https://world.openfoodfacts.org/api/v2/product/${barcode}.json` +
-    `?fields=product_name,ingredients_text_en,ingredients_text,ingredients,allergens_tags`
+    `?fields=product_name,ingredients_text_en,ingredients_text,ingredients,allergens_tags,image_front_url,image_url`
   );
   const data = await res.json();
 
@@ -23,6 +23,7 @@ export async function getProductByBarcode(barcode) {
 
   const product = {
     name: data.product.product_name_en || data.product.product_name || "Unknown product",
+    image: data.product.image_front_url || data.product.image_url || null,
     ingredients: normalizeIngredients(rawIngredients),
     allergens: (data.product.allergens_tags || []).map(tag =>
       tag.replace("en:", "")

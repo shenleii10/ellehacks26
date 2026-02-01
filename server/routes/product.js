@@ -45,6 +45,7 @@ router.get('/:barcode', async (req, res) => {
     const response = {
       name: product.name || 'Unknown',
       barcode,
+      image: product.image || null,
       ingredients: product.ingredients || [],
       warnings: [],
       allergens: product.allergens || [],

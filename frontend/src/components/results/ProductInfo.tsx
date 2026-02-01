@@ -251,11 +251,20 @@ export function ProductInfo() {
         {/* Product Image & Info */}
         <div className="p-6 lg:h-[calc(100vh-81px)] lg:overflow-auto">
           <div className="flex flex-col lg:items-center gap-4 mb-6">
-            <img
-              src={productData.image}
-              alt={productData.name}
-              className="w-full lg:w-64 h-48 lg:h-64 rounded-2xl object-cover"
-            />
+            {productData.image ? (
+              <img
+                src={productData.image}
+                alt={productData.name}
+                className="w-full lg:w-64 h-48 lg:h-64 rounded-2xl object-cover bg-gray-100 dark:bg-gray-800"
+              />
+            ) : (
+              <div className="w-full lg:w-64 h-48 lg:h-64 rounded-2xl bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center gap-2">
+                <svg className="w-12 h-12 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-xs text-gray-400 dark:text-gray-500">No image available</span>
+              </div>
+            )}
             <div className="w-full lg:text-center">
               <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 {productData.name}
