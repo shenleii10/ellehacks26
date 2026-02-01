@@ -86,7 +86,7 @@ export function ProductInfo() {
       setError("");
 
       try {
-        const res = await fetch(`http://localhost:3001/api/product/${barcode}`);
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/product/${barcode}`);
         if (!res.ok) {
           const data = await res.json();
           throw new Error(data.message || 'Product not found');
@@ -146,7 +146,7 @@ export function ProductInfo() {
     setAiError("");
 
     try {
-      const res = await fetch('http://localhost:3001/api/product/explain-ingredients', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/product/explain-ingredients`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ingredients: productData.ingredients })
