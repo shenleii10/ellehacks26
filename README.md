@@ -20,6 +20,7 @@ Our mission is to ensure that food transparency becomes a universal right. Empow
 #### 1. Prerequisites
 - React (v18+)
 - Express (v4+)
+- Next (v14+)
 - Supabase (v2)
 - npm Packages
 - Internet access (for Supabase, ElevenLabs, and external API calls)
