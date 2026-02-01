@@ -126,6 +126,14 @@ export function ProductInfo() {
     }
   }, [productData, isSpeechLoading]);
 
+  // Cleanup effect: Stop audio when component unmounts or user navigates away
+  useEffect(() => {
+    return () => {
+      // This runs when component unmounts (user navigates away)
+      stop();
+    };
+  }, []);  
+
   // Fetch AI explanations on demand
   const fetchAiExplanations = async () => {
     if (!productData || productData.ingredients.length === 0) return;

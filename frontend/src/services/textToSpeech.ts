@@ -48,14 +48,16 @@ export async function textToSpeech(text: string): Promise<Blob> {
  * @param product - Product data
  * @param isCompatible - Whether product is compatible with user diet
  * @param issues - Any dietary issues
+ * @param aiExplanations - Optional AI explanations for ingredients
  * @returns Formatted text for speech
  */
 export function generateProductSpeech(
     product: any,
     isCompatible: boolean,
-    issues: string[]
+    issues: string[],
+    aiExplanations?: Record<string, string>
 ): string {
-    let speech = `Product information for ${product.name} by ${product.brand}. `;
+    let speech = `Product information for ${product.name}. `;
 
     // Compatibility status
     if (isCompatible) {
@@ -64,10 +66,29 @@ export function generateProductSpeech(
         speech += `Warning! This product is not suitable for you. Issues: ${issues.join(', ')}. `;
     }
 
-    // Nutrition score
-    speech += `Nutrition score: ${product.nutritionScore}. `;
+    // Canada Hotlist Chemical Alert - CRITICAL FIRST!
+    if (product.hotlistCheck?.status === "fail" && product.hotlistCheck.hits && product.hotlistCheck.hits.length > 0) {
+        speech += "CRITICAL ALERT: This product contains chemicals on Canada's Hotlist. ";
 
-    // Warnings
+        const highSeverityHits = product.hotlistCheck.hits.filter((h: any) => h.severity === "high");
+        const mediumSeverityHits = product.hotlistCheck.hits.filter((h: any) => h.severity === "medium");
+
+        if (highSeverityHits.length > 0) {
+            speech += `${highSeverityHits.length} banned or restricted chemical${highSeverityHits.length > 1 ? 's' : ''} detected: `;
+            highSeverityHits.forEach((hit: any) => {
+                speech += `${hit.chemical}. ${hit.reason}. `;
+            });
+        }
+
+        if (mediumSeverityHits.length > 0) {
+            speech += `${mediumSeverityHits.length} chemical${mediumSeverityHits.length > 1 ? 's' : ''} under review: `;
+            mediumSeverityHits.forEach((hit: any) => {
+                speech += `${hit.chemical}. ${hit.reason}. `;
+            });
+        }
+    }
+
+    // Safety Warnings
     if (product.warnings && product.warnings.length > 0) {
         speech += "Safety alerts: ";
         product.warnings.forEach((warning: any) => {
@@ -75,10 +96,54 @@ export function generateProductSpeech(
         });
     }
 
-    // Main ingredients
+    // ALL Ingredients WITH AI Explanations!
     if (product.ingredients && product.ingredients.length > 0) {
-        const mainIngredients = product.ingredients.slice(0, 5);
-        speech += `Main ingredients: ${mainIngredients.join(', ')}. `;
+        speech += "Ingredients: ";
+
+        // If we have AI explanations, read ingredient + explanation for each
+        if (aiExplanations && Object.keys(aiExplanations).length > 0) {
+            product.ingredients.forEach((ingredient: string, index: number) => {
+                const explanation = Object.entries(aiExplanations).find(
+                    ([key]) => key.toLowerCase() === ingredient.toLowerCase()
+                )?.[1];
+
+                if (explanation) {
+                    // Read ingredient name + explanation
+                    speech += `${ingredient}: ${explanation}. `;
+                } else {
+                    // Just read ingredient name if no explanation
+                    speech += `${ingredient}. `;
+                }
+            });
+        } else {
+            // No AI explanations - just list all ingredients
+            speech += `${product.ingredients.join(', ')}. `;
+        }
+    }
+
+    // Dietary Compatibility - What it IS compatible with
+    if (product.compatibility && Object.keys(product.compatibility).length > 0) {
+        const compatibleDiets: string[] = [];
+        const incompatibleDiets: string[] = [];
+
+        Object.entries(product.compatibility).forEach(([key, value]) => {
+            // Convert camelCase to readable format (e.g., "glutenFree" -> "gluten free")
+            const readable = key.replace(/([A-Z])/g, ' $1').toLowerCase().trim();
+
+            if (value === true) {
+                compatibleDiets.push(readable);
+            } else {
+                incompatibleDiets.push(readable);
+            }
+        });
+
+        if (compatibleDiets.length > 0) {
+            speech += `This product is suitable for: ${compatibleDiets.join(', ')}. `;
+        }
+
+        if (incompatibleDiets.length > 0) {
+            speech += `Not suitable for: ${incompatibleDiets.join(', ')}. `;
+        }
     }
 
     return speech;
