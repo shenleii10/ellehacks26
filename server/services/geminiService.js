@@ -17,6 +17,8 @@ export async function explainIngredients(ingredients) {
 
   const prompt = `You are a helpful food and cosmetics ingredient expert. For each of the following ingredients, provide a brief, plain-English explanation of what it is and why it is used in the product. Keep each explanation to 1-2 sentences max. Be factual and neutral.
 
+IMPORTANT: If an ingredient is so self-explanatory that the explanation would just restate the ingredient name itself (e.g. "Water is water", "Sugar is a sweetener called sugar", "Salt is salt"), omit that ingredient from the response entirely. Only include it if you can add genuinely useful context beyond what the name already tells the user.
+
 Ingredients: ${ingredientList}
 
 Respond ONLY as a valid JSON object with this exact format (no markdown, no extra text):
@@ -26,7 +28,7 @@ Respond ONLY as a valid JSON object with this exact format (no markdown, no extr
   }
 }
 
-Make sure each key exactly matches one of the ingredient names provided (preserve original casing).`;
+Make sure each key exactly matches one of the ingredient names provided (preserve original casing). Only include keys for ingredients that have a meaningful explanation.`;
 
   const res = await fetch(OPENROUTER_URL, {
     method: 'POST',
