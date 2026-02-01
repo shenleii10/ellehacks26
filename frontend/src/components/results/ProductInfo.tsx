@@ -45,7 +45,7 @@ type Product = {
   image: string;
   ingredients: string[];
   warnings: Warning[];
-  nutritionScore: string;
+  // nutritionScore: string;
   compatibility: Record<string, boolean>;
   rawIngredientsText?: string;
   hotlistCheck?: HotlistCheck;
@@ -251,12 +251,12 @@ export function ProductInfo() {
             )}
           </button>
 
-          <div className={`px-3 py-1 rounded-full text-xs font-bold ${productData.nutritionScore === 'A'
+          {/* <div className={`px-3 py-1 rounded-full text-xs font-bold ${productData.nutritionScore === 'A'
               ? 'bg-emerald-500 text-white'
               : 'bg-yellow-500 text-white'
             }`}>
             Score: {productData.nutritionScore}
-          </div>
+          </div> */}
         </div>
         
 
