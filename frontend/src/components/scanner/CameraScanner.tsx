@@ -18,8 +18,10 @@ export function CameraScanner() {
   const QR_W = 280;
   const QR_H = 180;
 
-  // ✅ One place to move ONLY the overlay (visual frame) up/down
-  const OVERLAY_OFFSET_Y_PX = 0; // change to whatever (ex: 60, 120, etc.)
+  // ✅ How far down to shift the live camera feed (and the library's qrbox)
+  const CAMERA_SHIFT_DOWN_PX = 120;
+  // ✅ How far down to shift the pre-scan overlay (border + scan animation)
+  const OVERLAY_SHIFT_DOWN_PX = 0;
 
   useEffect(() => {
     if (!html5QrCodeRef.current) {
@@ -165,10 +167,16 @@ export function CameraScanner() {
       </button>
 
       {/* Main Camera View */}
-      <div className="flex-1 flex flex-col relative">
-        {/* Camera view */}
-        <div className="flex-1 relative bg-gradient-to-br from-gray-800 to-gray-900 dark:from-gray-900 dark:to-black">
-          <div id="barcode-camera" className="absolute inset-0 z-0" />
+      <div className="flex-1 flex flex-col relative h-screen min-h-0">
+        {/* Camera view — min-h-0 lets it shrink so bottom controls can claim their height */}
+        <div className="flex-1 min-h-0 relative bg-gradient-to-br from-gray-800 to-gray-900 dark:from-gray-900 dark:to-black overflow-hidden">
+          {/* ✅ Camera feed shifted down — the library centers its qrbox inside
+              this element, so pushing the element down moves everything together */}
+          <div
+            id="barcode-camera"
+            className="absolute inset-0 z-0"
+            style={{ top: CAMERA_SHIFT_DOWN_PX }}
+          />
 
           {/* Top bar - Mobile Only */}
           <div className="lg:hidden absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
@@ -191,7 +199,7 @@ export function CameraScanner() {
             <div className="absolute inset-0 flex items-center justify-center z-10">
               <div
                 className="relative"
-                style={{ transform: `translateY(${OVERLAY_OFFSET_Y_PX}px)` }}
+                style={{ transform: `translateY(${OVERLAY_SHIFT_DOWN_PX}px)` }}
               >
                 <div
                   className="border-2 border-white rounded-3xl relative"
@@ -245,16 +253,14 @@ export function CameraScanner() {
               </div>
             </div>
           )}
-
-          {/* ✅ Removed green pulsing circle entirely (per request) */}
         </div>
 
-        {/* Bottom controls */}
-        <div className="bg-gradient-to-t from-black to-transparent p-8 lg:p-12 space-y-4 lg:space-y-6">
+        {/* Bottom controls — shrink-0 prevents flex from squishing it, so h-[500px] sticks */}
+        <div className="shrink-0 h-[800px] bg-gradient-to-t from-black to-transparent flex flex-col items-center justify-center gap-4 lg:gap-6 p-8 lg:p-12">
           {/* Scan button - Bigger on desktop */}
           <button
             onClick={handleScan}
-            className={`w-28 h-28 lg:w-32 lg:h-32 mx-auto rounded-full flex items-center justify-center transition-all shadow-2xl ${
+            className={`w-28 h-28 lg:w-32 lg:h-32 rounded-full flex items-center justify-center transition-all shadow-2xl ${
               isScanning
                 ? 'bg-red-500 scale-95'
                 : 'bg-emerald-500 hover:bg-emerald-600 active:scale-95 shadow-emerald-500/50'
@@ -266,12 +272,10 @@ export function CameraScanner() {
           </button>
 
           {/* Upload option */}
-          <div className="flex justify-center">
-            <button className="flex items-center gap-2 px-6 py-3 lg:px-8 lg:py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all">
-              <ImageIcon className="w-5 h-5" />
-              <span className="text-sm lg:text-base font-medium">Upload Image</span>
-            </button>
-          </div>
+          <button className="flex items-center gap-2 px-6 py-3 lg:px-8 lg:py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all">
+            <ImageIcon className="w-5 h-5" />
+            <span className="text-sm lg:text-base font-medium">Upload Image</span>
+          </button>
 
           <p className="text-center text-gray-400 text-sm lg:text-base">
             Tap to scan or upload a photo of the barcode
