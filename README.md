@@ -15,6 +15,14 @@ Our mission is to ensure that food transparency becomes a universal right. Empow
 ## System Architecture
 
 ## Tech Stack
+| Layer | Technology | Purpose |
+|------|-----------|---------|
+| Frontend | React / Vite | Builds a fast, responsive, and accessible user interface |
+| Backend API | Node.js / Express | Handles application logic and service orchestration |
+| AI Services | Gemini AI, ElevenLabs | Ingredient analysis and text-to-speech accessibility |
+| Database & Auth | Supabase | User authentication and personalized profile storage |
+| External APIs | Product Data APIs | Retrieves product information via barcode lookup |
+
 
 ## Demo Video
 [![Safe Bite](https://img.youtube.com/vi/Oww4tIaYvbs/0.jpg)](https://www.youtube.com/watch?v=Oww4tIaYvbs)
