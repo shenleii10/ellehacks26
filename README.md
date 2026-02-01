@@ -13,6 +13,40 @@ Our mission is to ensure that food transparency becomes a universal right. Empow
 - Mobile Friendly Web App: Responsive Vite‑powered interface with an Express backend, optimized for fast, intuitive scanning and smooth onboarding across all devices.
 
 ## System Architecture
+┌────────────────────────────┐
+│          Frontend          │
+│      React + Vite          │
+│  • Barcode Scanner (UI)    │
+│  • Accessibility Controls  │
+│  • Results Display         │
+└──────────────┬─────────────┘
+               │ REST API Requests
+               ▼
+┌────────────────────────────┐
+│        Backend API         │
+│     Node.js + Express      │
+│  • API Routing Layer       │
+│  • Business Logic          │
+│  • Dietary Conflict Check  │
+└───────┬───────────┬────────┘
+        │           │
+        │           │
+        ▼           ▼
+┌─────────────────┐   ┌────────────────────────┐
+│    Supabase     │   │      AI Services       │
+│ • Auth          │   │  • Gemini AI           │
+│ • User Profiles │   │    (Ingredient Parsing)│
+│ • Preferences   │   │  • ElevenLabs          │
+└────────┬────────┘   │    (Text-to-Speech)    │
+         │            └──────────┬─────────────┘
+         │                       │
+         ▼                       ▼
+┌─────────────────────────────────────────────┐
+│             External Product APIs           │
+│        • Barcode → Product Lookup           │
+│        • Ingredient Data Retrieval          │
+└─────────────────────────────────────────────┘
+
 
 ## Tech Stack
 | Layer | Technology | Purpose |
