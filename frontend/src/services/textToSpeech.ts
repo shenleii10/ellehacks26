@@ -123,26 +123,35 @@ export function generateProductSpeech(
 
     // Dietary Compatibility - What it IS compatible with
     if (product.compatibility && Object.keys(product.compatibility).length > 0) {
-        const compatibleDiets: string[] = [];
-        const incompatibleDiets: string[] = [];
+        const passDiets: string[] = [];
+        const failDiets: string[] = [];
+        const uncertainDiets: string[] = [];
 
-        Object.entries(product.compatibility).forEach(([key, value]) => {
+        Object.entries(product.compatibility).forEach(([key, value]: [string, any]) => {
             // Convert camelCase to readable format (e.g., "glutenFree" -> "gluten free")
             const readable = key.replace(/([A-Z])/g, ' $1').toLowerCase().trim();
 
-            if (value === true) {
-                compatibleDiets.push(readable);
-            } else {
-                incompatibleDiets.push(readable);
+            // Check the status field (new backend format)
+            if (value.status === "pass") {
+                passDiets.push(readable);
+            } else if (value.status === "fail") {
+                failDiets.push(readable);
+            } else if (value.status === "uncertain") {
+                uncertainDiets.push(readable);
             }
+            // Skip "unknown" status - don't mention it
         });
 
-        if (compatibleDiets.length > 0) {
-            speech += `This product is suitable for: ${compatibleDiets.join(', ')}. `;
+        if (passDiets.length > 0) {
+            speech += `This product is suitable for: ${passDiets.join(', ')}. `;
         }
 
-        if (incompatibleDiets.length > 0) {
-            speech += `Not suitable for: ${incompatibleDiets.join(', ')}. `;
+        if (failDiets.length > 0) {
+            speech += `Not suitable for: ${failDiets.join(', ')}. `;
+        }
+
+        if (uncertainDiets.length > 0) {
+            speech += `Uncertain compatibility with: ${uncertainDiets.join(', ')}. `;
         }
     }
 
