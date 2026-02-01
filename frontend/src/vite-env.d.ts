@@ -3,11 +3,13 @@ declare module "*.jpg";
 declare module "*.jpeg";
 declare module "*.svg";
 
+/// <reference types="vite/client" />
+
 interface ImportMetaEnv {
-    readonly VITE_ELEVENLABS_API_KEY: string
-    // Add other env variables here if needed in the future
+    readonly VITE_API_URL: string;
+    // add other env variables here if needed
 }
 
 interface ImportMeta {
-    readonly env: ImportMetaEnv
+    readonly env: ImportMetaEnv;
   }
