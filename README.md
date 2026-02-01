@@ -18,9 +18,9 @@ Our mission is to ensure that food transparency becomes a universal right. Empow
 
 ## Demo Video
 [![Safe Bite](https://img.youtube.com/vi/Oww4tIaYvbs/0.jpg)](https://www.youtube.com/watch?v=Oww4tIaYvbs)
+(Hosted on Youtube)
 
-
-## Geting Started
+## Getting Started
 #### 1. Prerequisites
 - React (v18+)
 - Express (v4+)
