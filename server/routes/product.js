@@ -3,6 +3,7 @@ import { getProductByBarcode } from '../services/openFoodFacts.js';
 import { explainIngredients } from '../services/geminiService.js';
 import { evaluateDiet } from "../rules/evaluateDiet.js";
 import { evaluateAllergies } from "../rules/evaluateAllergies.js";
+import { evaluateHotlist } from "../rules/evaluateHotlist.js";
 
 const router = express.Router();
 
@@ -42,6 +43,11 @@ router.get('/:barcode', async (req, res) => {
       allergies: ["milk", "peanut"]
     });
 
+    // check against Canada Hotlist chemicals
+    const hotlistResult = evaluateHotlist({
+      ingredients: product.ingredients
+    });
+
     const response = {
       name: product.name || 'Unknown',
       barcode,
@@ -52,6 +58,7 @@ router.get('/:barcode', async (req, res) => {
       nutritionScore: 'N/A', // can fetch if you want
       dietCheck: dietResult,
       allergyCheck: allergyResult,
+      hotlistCheck: hotlistResult,
       compatibility: {} // fill based on user profile later
     };
 

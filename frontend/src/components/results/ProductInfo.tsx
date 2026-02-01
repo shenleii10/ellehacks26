@@ -11,7 +11,8 @@ import {
   Leaf,
   Shield,
   MapPin,
-  Sparkles
+  Sparkles,
+  Ban
 } from 'lucide-react';
 
 // Add these to your existing imports
@@ -25,6 +26,18 @@ type Warning = {
   description: string;
 };
 
+type HotlistHit = {
+  chemical: string;
+  severity: "high" | "medium";
+  matchedKeyword: string;
+  reason: string;
+};
+
+type HotlistCheck = {
+  status: "fail" | "pass";
+  hits?: HotlistHit[];
+};
+
 type Product = {
   name: string;
   brand: string;
@@ -35,6 +48,7 @@ type Product = {
   nutritionScore: string;
   compatibility: Record<string, boolean>;
   rawIngredientsText?: string;
+  hotlistCheck?: HotlistCheck;
 };
 
 export function ProductInfo() {
@@ -332,6 +346,60 @@ export function ProductInfo() {
                         {warning.description}
                       </p>
                     </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ─── Canada Hotlist Chemical Alert ─── only shown when hits exist */}
+          {productData.hotlistCheck?.status === "fail" && productData.hotlistCheck.hits && (
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2 text-lg">
+                <Ban className="w-5 h-5 text-red-600" />
+                🇨🇦 Canada Hotlist Chemicals
+              </h3>
+
+              {/* high-severity banner */}
+              {productData.hotlistCheck.hits.some(h => h.severity === "high") && (
+                <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700 font-medium">
+                    This product contains chemicals that are <strong>banned or restricted</strong> under Health Canada regulations.
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {productData.hotlistCheck.hits.map((hit, index) => (
+                  <div
+                    key={index}
+                    className={`p-4 rounded-xl border ${
+                      hit.severity === "high"
+                        ? "bg-red-50 border-red-200"
+                        : "bg-amber-50 border-amber-200"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                        {hit.chemical}
+                      </h4>
+                      <span
+                        className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                          hit.severity === "high"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {hit.severity === "high" ? "Banned / Restricted" : "Under Review"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                      Matched ingredient: <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-300">{hit.matchedKeyword}</code>
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {hit.reason}
+                    </p>
                   </div>
                 ))}
               </div>
