@@ -5,6 +5,7 @@ import { evaluateDiet } from "../rules/evaluateDiet.js";
 import { evaluateAllergies } from "../rules/evaluateAllergies.js";
 import { evaluateHotlist } from "../rules/evaluateHotlist.js";
 
+
 const router = express.Router();
 
 router.post('/explain-ingredients', async (req, res) => {
@@ -30,14 +31,15 @@ router.get('/:barcode', async (req, res) => {
 
   try {
     const product = await getProductByBarcode(barcode);
+    const combinedIngredients = [
+      ...product.ingredients,
+      ...(product.allergens || [])
+    ];
 
-    // test with vegan
     const dietResult = evaluateDiet({
-      ingredients: product.ingredients,
-      diet: "vegan"
+      ingredients: combinedIngredients
     });
 
-    // test with milk and peanut allergies
     const allergyResult = evaluateAllergies({
       ingredients: product.ingredients,
       allergies: ["milk", "peanut"]
@@ -48,6 +50,7 @@ router.get('/:barcode', async (req, res) => {
       ingredients: product.ingredients
     });
 
+
     const response = {
       name: product.name || 'Unknown',
       barcode,
@@ -56,10 +59,10 @@ router.get('/:barcode', async (req, res) => {
       warnings: [],
       allergens: product.allergens || [],
       nutritionScore: 'N/A', // can fetch if you want
-      dietCheck: dietResult,
+      dietChecks: dietResult,
       allergyCheck: allergyResult,
       hotlistCheck: hotlistResult,
-      compatibility: {} // fill based on user profile later
+      compatibility: dietResult // fill based on user profile later
     };
 
     res.json(response);

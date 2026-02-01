@@ -38,6 +38,12 @@ type HotlistCheck = {
   hits?: HotlistHit[];
 };
 
+type DietResult = {
+  status: "pass" | "fail" | "uncertain" | "unknown";
+  reason?: string;
+  hits?: string[];
+};
+
 type Product = {
   name: string;
   brand: string;
@@ -46,7 +52,7 @@ type Product = {
   ingredients: string[];
   warnings: Warning[];
   // nutritionScore: string;
-  compatibility: Record<string, boolean>;
+  compatibility: Record<string, DietResult>;
   rawIngredientsText?: string;
   hotlistCheck?: HotlistCheck;
 };
@@ -179,9 +185,12 @@ export function ProductInfo() {
     if (profile.dietTypes && Array.isArray(profile.dietTypes)) {
       profile.dietTypes.forEach((dietType: string) => {
         const restrictionKey = dietType as keyof typeof productData.compatibility;
-        if (productData.compatibility[restrictionKey] === false) {
+        if (
+          productData.compatibility[restrictionKey]?.status === "fail"
+        ) {
           issues.push(`Not ${dietType}`);
         }
+
       });
     }
 
@@ -237,8 +246,8 @@ export function ProductInfo() {
             onClick={handleSpeak}
             disabled={isSpeechLoading}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isPlaying
-                ? 'bg-emerald-500 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              ? 'bg-emerald-500 text-white'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             title={isPlaying ? 'Stop reading' : 'Read product info'}
           >
@@ -258,7 +267,7 @@ export function ProductInfo() {
             Score: {productData.nutritionScore}
           </div> */}
         </div>
-        
+
 
 
 
@@ -292,8 +301,8 @@ export function ProductInfo() {
 
           {/* Compatibility Status */}
           <div className={`p-4 lg:p-5 rounded-2xl flex items-start gap-3 ${isCompatible
-              ? 'bg-emerald-50 border-2 border-emerald-200'
-              : 'bg-red-50 border-2 border-red-200'
+            ? 'bg-emerald-50 border-2 border-emerald-200'
+            : 'bg-red-50 border-2 border-red-200'
             }`}>
             {isCompatible ? (
               <CheckCircle className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
@@ -332,8 +341,8 @@ export function ProductInfo() {
                   <div
                     key={index}
                     className={`p-4 rounded-xl flex gap-3 ${warning.level === 'warning'
-                        ? 'bg-yellow-50 border border-yellow-200'
-                        : 'bg-blue-50 border border-blue-200'
+                      ? 'bg-yellow-50 border border-yellow-200'
+                      : 'bg-blue-50 border border-blue-200'
                       }`}
                   >
                     <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${warning.level === 'warning' ? 'text-yellow-600' : 'text-blue-600'
@@ -374,22 +383,20 @@ export function ProductInfo() {
                 {productData.hotlistCheck.hits.map((hit, index) => (
                   <div
                     key={index}
-                    className={`p-4 rounded-xl border ${
-                      hit.severity === "high"
+                    className={`p-4 rounded-xl border ${hit.severity === "high"
                         ? "bg-red-50 border-red-200"
                         : "bg-amber-50 border-amber-200"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
                       <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
                         {hit.chemical}
                       </h4>
                       <span
-                        className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                          hit.severity === "high"
+                        className={`text-xs font-bold px-2 py-0.5 rounded-full ${hit.severity === "high"
                             ? "bg-red-100 text-red-700"
                             : "bg-amber-100 text-amber-700"
-                        }`}
+                          }`}
                       >
                         {hit.severity === "high" ? "Banned / Restricted" : "Under Review"}
                       </span>
@@ -494,27 +501,41 @@ export function ProductInfo() {
               Dietary Compatibility
             </h3>
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              {Object.entries(productData.compatibility).map(([key, value]) => (
-                <div
-                  key={key}
-                  className={`p-3 lg:p-4 rounded-xl border-2 ${value
-                      ? 'bg-emerald-50 border-emerald-200'
-                      : 'bg-gray-50 border-gray-200'
-                    }`}
-                >
-                  <div className="flex items-center gap-2">
-                    {value ? (
-                      <CheckCircle className="w-4 h-4 text-emerald-600" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-gray-400" />
-                    )}
-                    <span className={`text-sm font-medium capitalize ${value ? 'text-emerald-900' : 'text-gray-500'
-                      }`}>
-                      {key.replace(/([A-Z])/g, ' $1').trim()}
-                    </span>
-                  </div>
-                </div>
-              ))}
+              {Object.entries(productData.compatibility).map(([key, value]) => {
+  const status = value.status;
+
+  const statusStyles = {
+    pass: "bg-emerald-50 border-emerald-200 text-emerald-900",
+    fail: "bg-red-50 border-red-200 text-red-900",
+    uncertain: "bg-amber-50 border-amber-200 text-amber-900",
+    unknown: "bg-gray-50 border-gray-200 text-gray-600"
+  }[status];
+
+  return (
+    <div
+      key={key}
+      className={`p-3 lg:p-4 rounded-xl border-2 ${statusStyles}`}
+    >
+      <div className="flex items-center gap-2">
+        {status === "pass" && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+        {status === "fail" && <XCircle className="w-4 h-4 text-red-600" />}
+        {status === "uncertain" && <AlertTriangle className="w-4 h-4 text-amber-600" />}
+        {status === "unknown" && <Ban className="w-4 h-4 text-gray-400" />}
+
+        <span className="text-sm font-medium capitalize">
+          {key.replace(/([A-Z])/g, " $1").trim()}
+        </span>
+      </div>
+
+      {value.reason && (
+        <p className="mt-1 text-xs opacity-80">
+          {value.reason}
+        </p>
+      )}
+    </div>
+  );
+})}
+
             </div>
           </div>
 

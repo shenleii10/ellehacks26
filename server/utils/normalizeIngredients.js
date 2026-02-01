@@ -3,13 +3,9 @@ const NON_INGREDIENT_PHRASES = [
   "ingredient",
   "contains",
   "may contain",
-  "or contains",
-  "or ingredients",
   "allergen information",
   "for ingredients see",
-  "composition",
-  "and",
-  "or",
+  "composition"
 ];
 
 const MARKETING_WORDS = [
@@ -20,33 +16,46 @@ const MARKETING_WORDS = [
   "100%"
 ];
 
+export function normalizeIngredients(input = "") {
+  if (!input) return [];
 
-export function normalizeIngredients(text = '') {
+  // If array → join into one string
+  const text = Array.isArray(input) ? input.join(", ") : input;
 
   let cleaned = text.toLowerCase();
 
+  // Remove marketing words
   for (const word of MARKETING_WORDS) {
     cleaned = cleaned.replace(
       new RegExp(`\\b${word}\\b`, "gi"),
-      ""
+      " "
     );
   }
 
+  // Replace non-ingredient phrases with separators
   for (const phrase of NON_INGREDIENT_PHRASES) {
     cleaned = cleaned.replace(
-      new RegExp(`(?:^|[,:;])\\s*(or\\s+)?${phrase}\\s*:??`, "gi"),
+      new RegExp(`(?:^|[,:;])\\s*${phrase}\\s*:??`, "gi"),
       ","
     );
   }
-  
+
   const normalized = cleaned
-    .replace(/\(.*?\)/g, '')
+    // Remove symbols & footnotes
     .replace(/[*†‡]+/g, "")
+    // Normalize E-numbers
     .replace(/e[-\s]?(\d+)/g, "e$1")
+    // Normalize hyphens
     .replace(/-/g, " ")
-    .split(/[,;/]/)
-    .map(i => i.replace(/\s+/g, " ").trim())
+    // Split safely
+    .split(/[,;/]| and | or /)
+    .map(i =>
+      i
+        .replace(/\(.*?\)/g, "") // keep ingredient, drop note
+        .replace(/\s+/g, " ")
+        .trim()
+    )
     .filter(Boolean);
-  
+
   return [...new Set(normalized)];
 }
