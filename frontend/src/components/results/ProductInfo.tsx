@@ -326,7 +326,7 @@ export function ProductInfo() {
                 }`}>
                 {isCompatible
                   ? 'This product matches all your dietary preferences'
-                  : `Not suitable for: ${issues.join(', ')}`
+                  : `${issues.join(', ')}`
                 }
               </p>
             </div>
