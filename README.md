@@ -17,11 +17,11 @@ Our mission is to ensure that food transparency becomes a universal right. Empow
 ## Tech Stack
 | Layer | Technology | Purpose |
 |------|-----------|---------|
-| Frontend | React / Vite | Builds a fast, responsive, and accessible user interface |
-| Backend API | Node.js / Express | Handles application logic and service orchestration |
-| AI Services | Gemini AI, ElevenLabs | Ingredient analysis and text-to-speech accessibility |
-| Database & Auth | Supabase | User authentication and personalized profile storage |
-| External APIs | Product Data APIs | Retrieves product information via barcode lookup |
+| Frontend | React + Vite | Builds a fast, responsive, mobile-friendly UI with real-time barcode scanning |
+| Backend API | Node.js + Express | Handles barcode requests, AI orchestration, and business logic |
+| AI Services | Gemini AI, ElevenLabs | Ingredient interpretation and text-to-speech accessibility |
+| Database & Auth | Supabase | User authentication and storage of dietary preferences and allergies |
+| External APIs | Product Data APIs | Retrieves product and ingredient data via barcode lookup |
 
 
 ## Demo Video
