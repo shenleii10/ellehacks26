@@ -13,6 +13,7 @@ Our mission is to ensure that food transparency becomes a universal right. Empow
 - Mobile Friendly Web App: Responsive Vite‑powered interface with an Express backend, optimized for fast, intuitive scanning and smooth onboarding across all devices.
 
 ## System Architecture
+```
 ┌────────────────────────────┐
 │          Frontend          │
 │      React + Vite          │
@@ -46,7 +47,7 @@ Our mission is to ensure that food transparency becomes a universal right. Empow
 │        • Barcode → Product Lookup           │
 │        • Ingredient Data Retrieval          │
 └─────────────────────────────────────────────┘
-
+```
 
 ## Tech Stack
 | Layer | Technology | Purpose |
