@@ -14,6 +14,13 @@ export function CameraScanner() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const navigate = useNavigate();
 
+  // ✅ One place to edit scan box size
+  const QR_W = 280;
+  const QR_H = 180;
+
+  // ✅ One place to move ONLY the overlay (visual frame) up/down
+  const OVERLAY_OFFSET_Y_PX = 0; // change to whatever (ex: 60, 120, etc.)
+
   useEffect(() => {
     if (!html5QrCodeRef.current) {
       html5QrCodeRef.current = new Html5Qrcode("barcode-camera");
@@ -30,6 +37,7 @@ export function CameraScanner() {
   const handleScan = async () => {
     if (!html5QrCodeRef.current) return;
 
+    // Stop scanning
     if (isScanning && !isStartingRef.current) {
       try {
         await html5QrCodeRef.current.stop().catch(() => { });
@@ -50,7 +58,8 @@ export function CameraScanner() {
         { facingMode: "environment" },
         {
           fps: 10,
-          qrbox: { width: 280, height: 160 }
+          // ✅ This controls the "normal opacity" window size (always centered by library)
+          qrbox: { width: QR_W, height: QR_H }
         },
         async (decodedText) => {
           if (!html5QrCodeRef.current) return;
@@ -61,20 +70,18 @@ export function CameraScanner() {
           } catch { }
           navigate(`/product/${decodedText}`);
         },
-        (errorMessage) => {
+        (_errorMessage) => {
           // optional — usually fires every frame if no barcode detected
         }
       );
+
       isStartingRef.current = false;
     } catch (err: any) {
       console.error("Camera error", err);
       setIsScanning(false);
       isStartingRef.current = false;
 
-      const message = (
-        err?.message ||
-        err?.toString?.() ||
-        "").toLowerCase();
+      const message = (err?.message || err?.toString?.() || "").toLowerCase();
       const name = err?.name || "";
 
       if (
@@ -95,8 +102,11 @@ export function CameraScanner() {
   return (
     <div className="h-full min-h-screen bg-black dark:bg-gray-950 flex flex-col lg:flex-row relative">
       {/* Desktop Left Panel - Profile Quick Access with Slide Toggle */}
-      <div className={`hidden lg:flex lg:flex-col bg-gradient-to-br from-gray-900 to-gray-950 border-r border-gray-800 shrink-0 z-20 transition-all duration-300 overflow-hidden ${isSidebarOpen ? 'lg:w-80' : 'lg:w-0 lg:border-r-0'
-        }`}>
+      <div
+        className={`hidden lg:flex lg:flex-col bg-gradient-to-br from-gray-900 to-gray-950 border-r border-gray-800 shrink-0 z-20 transition-all duration-300 overflow-hidden ${
+          isSidebarOpen ? 'lg:w-80' : 'lg:w-0 lg:border-r-0'
+        }`}
+      >
         <div className={`transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <div className="p-6 border-b border-gray-800 flex items-center gap-3">
             <img src={logo} alt="SafeBite Logo" className="w-10 h-10" />
@@ -176,70 +186,67 @@ export function CameraScanner() {
             </button>
           </div>
 
-          {/* Scanner frame */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative">
-              {/* Scanning area - Larger on desktop */}
-              <div className="border-2 border-white rounded-3xl relative"
-                style={{ width: 280, height: 160 }}>
+          {/* ✅ Scanner UI — ONLY before scanning starts (disappears immediately on click) */}
+          {!isScanning && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <div
+                className="relative"
+                style={{ transform: `translateY(${OVERLAY_OFFSET_Y_PX}px)` }}
+              >
+                <div
+                  className="border-2 border-white rounded-3xl relative"
+                  style={{ width: QR_W, height: QR_H }}
+                >
+                  {cameraDenied && (
+                    <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-3xl">
+                      <div className="text-center px-6">
+                        <p className="text-white text-xl font-semibold mb-3">
+                          Camera Access Needed
+                        </p>
 
-                {cameraDenied && (
-                  <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-3xl">
-                    <div className="text-center px-6">
-                      <p className="text-white text-xl font-semibold mb-3">
-                        Camera Access Needed
-                      </p>
+                        <p className="text-gray-300 text-sm mb-6">
+                          Please allow camera access in your browser settings.
+                        </p>
 
-                      <p className="text-gray-300 text-sm mb-6">
-                        Please allow camera access in your browser settings.
-                      </p>
-
-                      <button
-                        onClick={() => {
-                          setCameraDenied(false);
-                          handleScan(); // retry
-                        }}
-                        className="px-6 py-3 bg-emerald-500 rounded-full text-white font-semibold">
-                        Try Again
-                      </button>
+                        <button
+                          onClick={() => {
+                            setCameraDenied(false);
+                            handleScan(); // retry
+                          }}
+                          className="px-6 py-3 bg-emerald-500 rounded-full text-white font-semibold"
+                        >
+                          Try Again
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Corner decorations */}
-                <div className="absolute top-0 left-0 w-8 h-8 lg:w-12 lg:h-12 border-l-4 border-t-4 border-emerald-500 rounded-tl-3xl" />
-                <div className="absolute top-0 right-0 w-8 h-8 lg:w-12 lg:h-12 border-r-4 border-t-4 border-emerald-500 rounded-tr-3xl" />
-                <div className="absolute bottom-0 left-0 w-8 h-8 lg:w-12 lg:h-12 border-l-4 border-b-4 border-emerald-500 rounded-bl-3xl" />
-                <div className="absolute bottom-0 right-0 w-8 h-8 lg:w-12 lg:h-12 border-r-4 border-b-4 border-emerald-500 rounded-br-3xl" />
+                  {/* Corner decorations */}
+                  <div className="absolute top-0 left-0 w-8 h-8 lg:w-12 lg:h-12 border-l-4 border-t-4 border-emerald-500 rounded-tl-3xl" />
+                  <div className="absolute top-0 right-0 w-8 h-8 lg:w-12 lg:h-12 border-r-4 border-t-4 border-emerald-500 rounded-tr-3xl" />
+                  <div className="absolute bottom-0 left-0 w-8 h-8 lg:w-12 lg:h-12 border-l-4 border-b-4 border-emerald-500 rounded-bl-3xl" />
+                  <div className="absolute bottom-0 right-0 w-8 h-8 lg:w-12 lg:h-12 border-r-4 border-b-4 border-emerald-500 rounded-br-3xl" />
 
-                {/* Scanning line animation */}
-                {isScanning && (
+                  {/* Scanning line animation (pre-scan vibe) */}
                   <div className="absolute inset-0 overflow-hidden rounded-3xl">
                     <div className="absolute w-full h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent animate-scan" />
                   </div>
-                )}
-              </div>
+                </div>
 
-              {/* Instruction text */}
-              <div className="mt-8 text-center">
-                <p className="text-white font-semibold text-lg lg:text-xl mb-2">
-                  {isScanning ? 'Scanning...' : 'Align barcode within frame'}
-                </p>
-                <p className="text-gray-400 text-sm lg:text-base">
-                  Hold steady for best results
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Scanning status */}
-          {isScanning && (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-              <div className="bg-emerald-500 p-4 lg:p-6 rounded-full shadow-lg shadow-emerald-500/50 animate-pulse">
-                <ScanLine className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
+                {/* Instruction text */}
+                <div className="mt-8 text-center">
+                  <p className="text-white font-semibold text-lg lg:text-xl mb-2">
+                    Align barcode within frame
+                  </p>
+                  <p className="text-gray-400 text-sm lg:text-base">
+                    Hold steady for best results
+                  </p>
+                </div>
               </div>
             </div>
           )}
+
+          {/* ✅ Removed green pulsing circle entirely (per request) */}
         </div>
 
         {/* Bottom controls */}
@@ -247,10 +254,11 @@ export function CameraScanner() {
           {/* Scan button - Bigger on desktop */}
           <button
             onClick={handleScan}
-            className={`w-28 h-28 lg:w-32 lg:h-32 mx-auto rounded-full flex items-center justify-center transition-all shadow-2xl ${isScanning
+            className={`w-28 h-28 lg:w-32 lg:h-32 mx-auto rounded-full flex items-center justify-center transition-all shadow-2xl ${
+              isScanning
                 ? 'bg-red-500 scale-95'
                 : 'bg-emerald-500 hover:bg-emerald-600 active:scale-95 shadow-emerald-500/50'
-              }`}
+            }`}
           >
             <div className="w-24 h-24 lg:w-28 lg:h-28 bg-white rounded-full flex items-center justify-center">
               <ScanLine className={`w-12 h-12 lg:w-14 lg:h-14 text-emerald-500 ${isScanning ? 'animate-pulse' : ''}`} />
